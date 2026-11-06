@@ -202,6 +202,7 @@ h2{font-weight:700;letter-spacing:-.6px}
 pre.bib{font-family:var(--mono)}
 figcaption{font-family:var(--sans);font-style:normal;font-size:14.5px}
 .soon{color:#9a9a9a;cursor:default;white-space:nowrap}.soon em{font-style:normal;font-family:var(--mono);font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:2px 7px;margin-left:4px;vertical-align:1px}
+.btn-soon{color:#9a9a9a;cursor:default;border-style:dashed}.btn-soon:hover{opacity:1}.btn-soon em{font-style:normal;font-family:var(--mono);font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:2px 7px;margin-left:6px;vertical-align:1px}
 </style>
 </head>
 <body>
@@ -239,6 +240,7 @@ figcaption{font-family:var(--sans);font-style:normal;font-size:14.5px}
   <div class="btns">
     <a class="btn" href="paper.pdf">Read the paper</a>
     <a class="btn ghost" href="#citation">Cite</a>
+    <span class="btn ghost btn-soon" title="Code release coming soon" aria-disabled="true">Code <em>soon!</em></span>
   </div>
   <p class="tagline">Can AI agents learn to work together without being told how? We train swarms of language models with <b>no leader, no roles, and no turn order</b>. They share one reward, message each other whenever they want, and learn to organize during training.</p>
 </header>
