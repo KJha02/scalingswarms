@@ -782,7 +782,7 @@ start();
   const N=slots.length;
   const agents=[];
   for(let i=0;i<N;i++)agents.push({x:Math.random()*W,y:Math.random()*H,vx:0,vy:0,slot:null,col:'#b9b9b4',ph:Math.random()*6.28,busy:0});
-  const msgs=[];
+  const msgs=[];let formed=false;
   let mx=-999,my=-999,mouseOn=false;
   const R=52;
   function pos(e){const r=cv.getBoundingClientRect();const p=e.touches?e.touches[0]:e;mx=(p.clientX-r.left)*W/r.width;my=(p.clientY-r.top)*H/r.height;mouseOn=true}
@@ -796,7 +796,8 @@ start();
   if(reduce)slots.forEach((s,i)=>{if(!s.agent){const a=agents.find(a=>!a.slot);a.x=s.x;a.y=s.y;assign(a,s)}});
   function recruit(now){
     // vacant slots that border an occupied one ask a neighbor to call in a free agent
-    let budget=mouseOn?10:60;
+    if(!formed&&slots.every(s=>s.agent))formed=true;
+    let budget=formed?(mouseOn?8:22):(mouseOn?10:60);
     const vac=slots.filter(s=>!s.agent&&!s.pending&&s.nb.some(t=>t.agent&&Math.hypot(t.agent.x-t.x,t.agent.y-t.y)<14));
     for(let k=0;k<vac.length&&budget>0;k++){
       const s=vac[Math.floor(Math.random()*vac.length)];
@@ -806,7 +807,7 @@ start();
       if(!best)break;
       const sender=s.nb.find(t=>t.agent)?.agent;
       s.pending=true;best.busy=now+1e9;budget--;
-      msgs.push({from:sender,to:best,slot:s,t0:now,dur:Math.min(160,50+bd*0.4),col:s.color});
+      msgs.push({from:sender,to:best,slot:s,t0:now,dur:formed?Math.min(240,70+bd*0.6):Math.min(160,50+bd*0.4),col:s.color});
     }
   }
   let last=performance.now();
@@ -817,7 +818,7 @@ start();
       if(m.done&&now-m.done>300)msgs.splice(i,1)}
     for(const a of agents){
       const s=a.slot;
-      if(s){a.vx+=(s.x-a.x)*0.2*dt;a.vy+=(s.y-a.y)*0.2*dt;}
+      if(s){const kk=formed?0.14:0.2;a.vx+=(s.x-a.x)*kk*dt;a.vy+=(s.y-a.y)*kk*dt;}
       else{ // free agents mill around, drifting toward the logo
         a.ph+=0.03*dt;a.vx+=(Math.cos(a.ph)*0.06+(W/2-a.x)*0.0004)*dt;a.vy+=(Math.sin(a.ph*1.3)*0.06+(H/2-a.y)*0.0005)*dt;}
       const dx=a.x-mx,dy=a.y-my,d=Math.hypot(dx,dy);
