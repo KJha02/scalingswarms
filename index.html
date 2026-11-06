@@ -35,7 +35,7 @@ nav.top ul{list-style:none;margin:0;padding:0;display:flex;gap:26px;font-size:14
 nav.top a{text-decoration:none;color:var(--muted)} nav.top a:hover{color:var(--ink)}
 nav.top a.cta{color:var(--ink);font-weight:700}
 /* hero */
-header.hero{text-align:center;padding:72px 24px 30px;max-width:980px;margin:0 auto}
+header.hero{text-align:center;padding:40px 24px 30px;max-width:980px;margin:0 auto}
 .word{font-size:clamp(64px,11vw,128px);font-weight:800;letter-spacing:-4px;line-height:1;margin:0}
 .word .s{color:var(--ink)} .word .w{color:var(--accent)}
 .subtitle{font-size:clamp(24px,3.2vw,34px);font-weight:500;letter-spacing:-.6px;margin:18px auto 26px;max-width:640px;line-height:1.25}
@@ -53,6 +53,10 @@ header.hero{text-align:center;padding:72px 24px 30px;max-width:980px;margin:0 au
 .btn.ghost{background:#fff;color:var(--ink);border:1px solid #cfcfcf}
 .btn:hover{opacity:.88}
 .tagline{max-width:640px;margin:26px auto 0;color:#333;font-size:18px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.logo{display:block;margin:0 auto;cursor:crosshair;touch-action:pan-y}
+.hint{font-size:12px;color:#9a9a9a;letter-spacing:.4px;margin-top:2px}
+.sub2{font-size:.62em;color:var(--muted);font-weight:400;letter-spacing:-.2px}
 /* demo */
 .demo-wrap{max-width:1040px;margin:30px auto 0;padding:0 24px}
 .demo{background:#fbfbf9;border:1px solid var(--line);border-radius:10px;overflow:hidden}
@@ -133,7 +137,7 @@ footer a{color:var(--accent)}
 <body>
 <a class="skip" href="#main">Skip to content</a>
 <nav class="top"><div class="in">
-  <a class="mark" href="#"><span class="s">s³</span> <span class="w">Swarms</span></a>
+  <a class="mark" href="#"><span class="s">s</span><span class="w">³</span></a>
   <ul>
     <li class="hide"><a href="#method">Method</a></li>
     <li class="hide"><a href="#infra">Infrastructure</a></li>
@@ -144,8 +148,10 @@ footer a{color:var(--accent)}
 </div></nav>
 
 <header class="hero" id="main">
-  <h1 class="word"><span class="s">s³</span><span class="w">warms</span></h1>
-  <p class="subtitle">Simple Scaling of Swarms via Cooperative Multi-agent RL</p>
+  <h1 class="sr">s³</h1>
+  <canvas id="logo" class="logo" aria-hidden="true"></canvas>
+  <div class="hint">every dot is an agent · move your cursor through the logo</div>
+  <p class="subtitle">Simple Scaling of <span style="color:var(--accent)">Swarms</span><br><span class="sub2">via Cooperative Multi-agent RL</span></p>
   <div class="authors">
     <a href="https://kjha02.github.io/">Kunal Jha<sup>†</sup></a>
     <a href="https://www.goncalofaria.com/">Gonçalo Faria<sup>†</sup></a>
@@ -706,6 +712,98 @@ function runExp(){
 function start(){clear();if(scene==='agg')runAgg();else runExp();}
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');scene=b.dataset.scene;mode='shared';start()});
 start();
+})();
+</script>
+<script>
+/* ===== s³ logo made of a self-repairing swarm ===== */
+(function(){
+  const cv=document.getElementById('logo'); if(!cv)return;
+  let W=600,H=340; const dpr=Math.min(2,window.devicePixelRatio||1);
+  const ctx=cv.getContext('2d');
+  const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // 1. rasterize the glyphs offscreen and sample slots
+  const off=document.createElement('canvas');off.width=W;off.height=H;const o=off.getContext('2d');
+  o.font='800 380px Arial, Helvetica, sans-serif';const ws=o.measureText('s').width;
+  o.font='800 210px Arial, Helvetica, sans-serif';const w3=o.measureText('³').width;
+  const x0=(W-(ws+w3+6))/2;
+  const slots=[];
+  function sample(color){const d=o.getImageData(0,0,W,H).data;const step=7.4;
+    for(let y=4,r=0;y<H;y+=step*.88,r++)for(let x=4+(r%2)*step/2;x<W;x+=step){const i=((y|0)*W+(x|0))*4+3;if(d[i]>140)slots.push({x,y,color,agent:null})}
+    o.clearRect(0,0,W,H)}
+  o.fillStyle='#000';o.font='800 380px Arial, Helvetica, sans-serif';o.fillText('s',x0,300);sample('#232323');
+  o.font='800 210px Arial, Helvetica, sans-serif';o.fillText('³',x0+ws+6,280);sample('#029E73');
+  // crop the canvas to the glyphs with some room for agents to scatter
+  {const pad=46;let x1=1e9,y1=1e9,x2=-1e9,y2=-1e9;slots.forEach(s=>{x1=Math.min(x1,s.x);y1=Math.min(y1,s.y);x2=Math.max(x2,s.x);y2=Math.max(y2,s.y)});
+   slots.forEach(s=>{s.x+=pad-x1+40;s.y+=pad-y1});W=Math.round(x2-x1+2*pad+80);H=Math.round(y2-y1+2*pad);
+   cv.width=W*dpr;cv.height=H*dpr;ctx.scale(dpr,dpr);cv.style.aspectRatio=W+'/'+H;cv.style.width='min('+W+'px,92vw)';}
+  // neighbor lists for NCA-style growth
+  slots.forEach(s=>{s.nb=slots.filter(t=>t!==s&&Math.hypot(t.x-s.x,t.y-s.y)<11)});
+  // 2. agents
+  const N=slots.length;
+  const agents=[];
+  for(let i=0;i<N;i++)agents.push({x:Math.random()*W,y:Math.random()*H,vx:0,vy:0,slot:null,col:'#b9b9b4',ph:Math.random()*6.28,busy:0});
+  const msgs=[];
+  let mx=-999,my=-999,mouseOn=false;
+  const R=52;
+  function pos(e){const r=cv.getBoundingClientRect();const p=e.touches?e.touches[0]:e;mx=(p.clientX-r.left)*W/r.width;my=(p.clientY-r.top)*H/r.height;mouseOn=true}
+  cv.addEventListener('pointermove',pos);cv.addEventListener('pointerdown',pos);
+  cv.addEventListener('pointerleave',()=>{mouseOn=false;mx=my=-999});
+  cv.addEventListener('touchmove',e=>{pos(e)},{passive:true});cv.addEventListener('touchend',()=>{mouseOn=false;mx=my=-999});
+  function assign(a,s){a.slot=s;s.agent=a;s.pending=false;a.settled=false}
+  function release(a){if(a.slot){a.slot.agent=null;a.slot=null}}
+  // seed: one slot in each glyph
+  [slots[Math.floor(slots.length*0.3)], slots[slots.length-5]].forEach((s,k)=>{const a=agents[k];a.x=s.x;a.y=s.y;assign(a,s)});
+  if(reduce)slots.forEach((s,i)=>{if(!s.agent){const a=agents.find(a=>!a.slot);a.x=s.x;a.y=s.y;assign(a,s)}});
+  function recruit(now){
+    // vacant slots that border an occupied one ask a neighbor to call in a free agent
+    let budget=mouseOn?5:9;
+    const vac=slots.filter(s=>!s.agent&&!s.pending&&s.nb.some(t=>t.agent&&Math.hypot(t.agent.x-t.x,t.agent.y-t.y)<6));
+    for(let k=0;k<vac.length&&budget>0;k++){
+      const s=vac[Math.floor(Math.random()*vac.length)];
+      if(s.pending||s.agent)continue;
+      if(Math.hypot(s.x-mx,s.y-my)<R+6)continue;
+      let best=null,bd=1e9;for(const a of agents){if(a.slot||a.busy>now)continue;const d=Math.hypot(a.x-s.x,a.y-s.y);if(d<bd){bd=d;best=a}}
+      if(!best)break;
+      const sender=s.nb.find(t=>t.agent)?.agent;
+      s.pending=true;best.busy=now+1e9;budget--;
+      msgs.push({from:sender,to:best,slot:s,t0:now,dur:Math.min(420,120+bd*1.2),col:s.color});
+    }
+  }
+  let last=performance.now();
+  function frame(now){
+    const dt=Math.min(32,now-last)/16.67;last=now;
+    if(!reduce)recruit(now);
+    for(let i=msgs.length-1;i>=0;i--){const m=msgs[i];if(!m.done&&now-m.t0>m.dur){if(!m.slot.agent&&!m.to.slot)assign(m.to,m.slot);else m.slot.pending=false;m.to.busy=0;m.done=now}
+      if(m.done&&now-m.done>300)msgs.splice(i,1)}
+    for(const a of agents){
+      const s=a.slot;
+      if(s){a.vx+=(s.x-a.x)*0.08*dt;a.vy+=(s.y-a.y)*0.08*dt;}
+      else{ // free agents mill around, drifting toward the logo
+        a.ph+=0.03*dt;a.vx+=(Math.cos(a.ph)*0.06+(W/2-a.x)*0.0004)*dt;a.vy+=(Math.sin(a.ph*1.3)*0.06+(H/2-a.y)*0.0005)*dt;}
+      const dx=a.x-mx,dy=a.y-my,d=Math.hypot(dx,dy);
+      if(d<R&&d>0.01){const f=(1-d/R)*2.6*dt;a.vx+=dx/d*f;a.vy+=dy/d*f;}
+      a.vx*=s?0.72:0.9;a.vy*=s?0.72:0.9;a.x+=a.vx*dt;a.y+=a.vy*dt;
+      if(s){const ds=Math.hypot(a.x-s.x,a.y-s.y);if(ds<3)a.settled=true;if(a.settled&&ds>14&&d<R+20){release(a);a.busy=now+500}}
+      a.x=Math.max(2,Math.min(W-2,a.x));a.y=Math.max(2,Math.min(H-2,a.y));
+      const target=a.slot?a.slot.color:'#b9b9b4';a.col=target;
+    }
+    // draw
+    ctx.clearRect(0,0,W,H);
+    for(const m of msgs){
+      const fx=m.from?m.from.x:m.slot.x, fy=m.from?m.from.y:m.slot.y;
+      const k=Math.min(1,(now-m.t0)/m.dur), fade=m.done?Math.max(0,1-(now-m.done)/350):1;
+      ctx.globalAlpha=0.45*fade;ctx.strokeStyle=m.col==='#029E73'?'#029E73':'#DE8F05';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(fx,fy);ctx.lineTo(m.to.x,m.to.y);ctx.stroke();
+      if(!m.done){ctx.globalAlpha=0.9;ctx.fillStyle=ctx.strokeStyle;ctx.beginPath();ctx.arc(fx+(m.to.x-fx)*k,fy+(m.to.y-fy)*k,1.8,0,6.29);ctx.fill();}
+    }
+    ctx.globalAlpha=1;
+    for(const a of agents){
+      ctx.fillStyle=a.col;ctx.beginPath();ctx.arc(a.x,a.y,3.3,0,6.29);ctx.fill();
+      ctx.fillStyle='#fff';ctx.fillRect(a.x-1.5,a.y-1.1,1,1);ctx.fillRect(a.x+0.5,a.y-1.1,1,1);
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
 })();
 </script>
 </body>
