@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>s³: Simple Scaling of Swarms via Cooperative Multi-agent RL</title>
+<meta name="description" content="LLM swarms with no leader, no roles, and no turn order learn to self-organize through cooperative multi-agent reinforcement learning.">
+<meta property="og:title" content="s³: Simple Scaling of Swarms">
+<meta property="og:description" content="Asynchronous, role-free LLM swarms learn emergent coordination with one shared reward, beat best-of-N, and scale past their training size.">
+<meta property="og:image" content="https://scalingswarms.com/assets/overview.png">
+<meta property="og:url" content="https://scalingswarms.com">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#2b2b2b">
+<script>
+window.MathJax = { tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] }, chtml: { scale: 1.05 } };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+<style>
+:root{
+  --ink:#232323; --muted:#5b5b5b; --dark:#2b2b2b; --dark2:#343434;
+  --accent:#029E73; --accent-soft:#e6f5ef; --accent-light:#5fd3ab;
+  --orange:#DE8F05; --red:#C44E52; --line:#e4e4e4; --paper:#fff;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:var(--paper);line-height:1.6;font-size:17px;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.skip{position:absolute;left:-999px}.skip:focus{left:12px;top:12px;background:#fff;padding:8px;z-index:99}
+/* nav */
+nav.top{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.94);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+nav.top .in{max-width:1120px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;justify-content:space-between}
+.mark{font-weight:800;text-decoration:none;font-size:18px;letter-spacing:-.3px}
+.mark .s{color:var(--ink)} .mark .w{color:var(--accent)}
+nav.top ul{list-style:none;margin:0;padding:0;display:flex;gap:26px;font-size:14px}
+nav.top a{text-decoration:none;color:var(--muted)} nav.top a:hover{color:var(--ink)}
+nav.top a.cta{color:var(--ink);font-weight:700}
+/* hero */
+header.hero{text-align:center;padding:72px 24px 30px;max-width:980px;margin:0 auto}
+.word{font-size:clamp(64px,11vw,128px);font-weight:800;letter-spacing:-4px;line-height:1;margin:0}
+.word .s{color:var(--ink)} .word .w{color:var(--accent)}
+.subtitle{font-size:clamp(24px,3.2vw,34px);font-weight:500;letter-spacing:-.6px;margin:18px auto 26px;max-width:640px;line-height:1.25}
+.authors{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 10px;margin:0 auto 10px;max-width:860px}
+.authors a{text-decoration:none;border-bottom:1px solid #ccc;padding:2px 2px;font-size:15.5px;white-space:nowrap}
+.authors a:hover{border-color:var(--accent);color:var(--accent)}
+.authors sup{font-size:10px;color:var(--accent);font-weight:700;margin-left:2px}
+.affil{font-size:14px;color:var(--muted);display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin:6px 0 4px}
+.affil b{display:inline-block;background:#4b2e83;color:#fff;font-size:10px;border-radius:3px;padding:1px 5px;margin-right:6px;vertical-align:1px}
+.affil b.ai2{background:#f0529c}
+.notes{font-size:12.5px;color:var(--muted);margin-top:4px}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+.btns{display:flex;gap:12px;justify-content:center;margin:26px 0 8px;flex-wrap:wrap}
+.btn{display:inline-block;background:var(--dark);color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:12px 22px;border-radius:4px}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid #cfcfcf}
+.btn:hover{opacity:.88}
+.tagline{max-width:640px;margin:26px auto 0;color:#333;font-size:18px}
+/* demo */
+.demo-wrap{max-width:1040px;margin:30px auto 0;padding:0 24px}
+.demo{background:#fbfbf9;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.demo .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line);background:#fff}
+.tabs,.toggle{display:flex;gap:6px;flex-wrap:wrap}
+.tabs button,.toggle button{font:inherit;font-size:13px;border:1px solid #d6d6d6;background:#fff;border-radius:999px;padding:6px 13px;cursor:pointer;color:var(--muted)}
+.tabs button.on{background:var(--dark);color:#fff;border-color:var(--dark)}
+.toggle button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.toggle button.on.bad{background:var(--red);border-color:var(--red)}
+.demo svg{display:block;width:100%;height:auto}
+.demo .cap{padding:10px 16px 14px;font-size:14px;color:var(--muted);border-top:1px solid var(--line);background:#fff;min-height:48px}
+.demo .cap b{color:var(--ink)}
+/* sections */
+section{padding:84px 24px}
+section .in{max-width:1040px;margin:0 auto}
+.label{font-size:12px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--accent);margin-bottom:14px}
+h2{font-size:clamp(30px,4vw,44px);font-weight:800;letter-spacing:-1.2px;line-height:1.1;margin:0 0 22px}
+h3{font-size:21px;font-weight:700;letter-spacing:-.3px;margin:34px 0 8px}
+p{margin:0 0 16px}
+.prose{max-width:740px}
+.lead{font-size:20px;line-height:1.5;color:#333}
+section.dark{background:var(--dark);color:#eee}
+section.dark .label{color:var(--accent-light)}
+section.dark .muted,section.dark figcaption{color:#b8b8b8}
+section.dark .lead{color:#ddd}
+.split{display:grid;grid-template-columns:1fr 1.25fr;gap:48px;align-items:start}
+@media(max-width:820px){.split{grid-template-columns:1fr}nav.top ul li.hide{display:none}}
+figure{margin:30px 0}
+figure img{width:100%;height:auto;display:block;border-radius:6px;background:#fff}
+figure.narrow img{max-width:640px;margin:0 auto}
+figcaption{font-size:14px;color:var(--muted);font-style:italic;margin-top:10px;max-width:780px}
+figcaption b{font-style:normal;color:var(--ink)}
+section.dark figcaption b{color:#fff}
+/* steps */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:34px}
+@media(max-width:820px){.steps{grid-template-columns:1fr}}
+.step{border-top:2px solid var(--accent-light);padding-top:16px}
+.step .n{font-family:ui-monospace,Menlo,monospace;color:var(--accent-light);font-size:14px;margin-bottom:10px}
+.step h4{font-size:19px;margin:0 0 8px;color:#fff}
+.step p{font-size:15.5px;color:#cfcfcf}
+.eqbox{background:var(--dark2);border:1px solid #474747;border-radius:8px;padding:18px 20px;margin:12px 0 4px;overflow-x:auto}
+section:not(.dark) .eqbox{background:#f7f7f5;border-color:var(--line)}
+.eqlegend{font-size:13.5px;color:#bdbdbd;display:flex;gap:18px;flex-wrap:wrap;margin-top:6px}
+.eqlegend span::before{content:"";display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px;background:currentColor}
+/* cards */
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-top:30px}
+@media(max-width:820px){.cards{grid-template-columns:1fr}}
+.card{border:1px solid var(--line);border-radius:8px;padding:22px 22px 8px;background:#fff}
+.card .k{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--accent);margin-bottom:6px}
+.card h4{margin:0 0 8px;font-size:18px}
+.card p{font-size:15.5px;color:#3a3a3a}
+.card code,.prose code{font-family:ui-monospace,Menlo,monospace;font-size:.88em;background:#f1f1ee;padding:1px 5px;border-radius:3px}
+section.dark code{background:#3d3d3d}
+/* tasks */
+.tasks{display:grid;grid-template-columns:1fr 1fr;gap:36px;margin-top:20px}
+@media(max-width:820px){.tasks{grid-template-columns:1fr}}
+.task{border-top:2px solid var(--accent-light);padding-top:18px}
+.task h3{color:#fff;margin-top:0}
+.task .ex{font-size:14.5px;color:#cfcfcf;border-left:3px solid #555;padding-left:12px;margin:14px 0}
+.trend{font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.trend.down{color:#ff9a8f}.trend.up{color:var(--accent-light)}
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin:30px 0}
+@media(max-width:700px){.stats{grid-template-columns:1fr}}
+.stat{border-left:3px solid var(--accent);padding:4px 0 4px 16px}
+.stat .v{font-size:44px;font-weight:800;letter-spacing:-1.5px;line-height:1}
+.stat .v.g{color:var(--accent)}
+.stat .d{font-size:14px;color:var(--muted);margin-top:6px}
+section.dark .stat .d{color:#bbb}
+.callout{background:var(--accent-soft);border-left:4px solid var(--accent);padding:16px 20px;border-radius:0 6px 6px 0;margin:24px 0;max-width:740px}
+/* citation */
+pre.bib{background:#f6f6f4;border:1px solid var(--line);border-radius:8px;padding:18px;overflow-x:auto;font-size:13px;line-height:1.5}
+.copy{font:inherit;font-size:13px;border:1px solid #cfcfcf;background:#fff;padding:6px 12px;border-radius:4px;cursor:pointer;margin-bottom:10px}
+footer{border-top:1px solid var(--line);padding:30px 24px 50px;text-align:center;color:var(--muted);font-size:13.5px}
+footer a{color:var(--accent)}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<nav class="top"><div class="in">
+  <a class="mark" href="#"><span class="s">s³</span> <span class="w">Swarms</span></a>
+  <ul>
+    <li class="hide"><a href="#method">Method</a></li>
+    <li class="hide"><a href="#infra">Infrastructure</a></li>
+    <li class="hide"><a href="#results">Results</a></li>
+    <li class="hide"><a href="#citation">Citation</a></li>
+    <li><a class="cta" href="paper.pdf">Read the paper</a></li>
+  </ul>
+</div></nav>
+
+<header class="hero" id="main">
+  <h1 class="word"><span class="s">s³</span><span class="w">warms</span></h1>
+  <p class="subtitle">Simple Scaling of Swarms via Cooperative Multi-agent RL</p>
+  <div class="authors">
+    <a href="https://kjha02.github.io/">Kunal Jha<sup>†</sup></a>
+    <a href="https://www.goncalofaria.com/">Gonçalo Faria<sup>†</sup></a>
+    <a href="https://stellalisy.com/">Shuyue Stella Li<sup>†</sup></a>
+    <a href="https://x.com/scottgeng00">Scott Geng<sup>†</sup></a>
+    <a href="https://fabrahman.github.io/">Faeze Brahman</a>
+    <a href="https://homes.cs.washington.edu/~nasmith/">Noah A. Smith</a>
+    <a href="https://homes.cs.washington.edu/~yuliats/">Yulia Tsvetkov</a>
+    <a href="https://faculty.washington.edu/maxkw/">Max Kleiman-Weiner<sup>‡</sup></a>
+    <a href="https://natashajaques.ai/">Natasha Jaques<sup>‡</sup></a>
+  </div>
+  <div class="affil"><span><b>UW</b>University of Washington</span><span><b class="ai2">Ai2</b>Allen Institute for AI</span></div>
+  <div class="notes">† Equal contribution &nbsp;·&nbsp; ‡ Equal advising &nbsp;·&nbsp; Correspondence: <a class="mono" href="mailto:kjha@uw.edu">kjha@uw.edu</a></div>
+  <div class="btns">
+    <a class="btn" href="paper.pdf">Read the paper</a>
+    <a class="btn ghost" href="#citation">Cite</a>
+  </div>
+  <p class="tagline">What if a swarm of AI agents could figure out how to work together on its own? s³ trains LLM swarms with <b>no leader, no roles, and no turn order</b>, just one shared reward, and lets their organization emerge.</p>
+</header>
+
+<div class="demo-wrap">
+  <div class="demo">
+    <svg id="hero" viewBox="0 0 1000 430" role="img" aria-label="Animated swarm of agents exploring a field and messaging each other about discoveries"></svg>
+    <div class="cap" id="herocap"><b>A swarm at work.</b> Agents explore on their own, broadcast what they find, and teammates build follow-up discoveries on top of each other's finds. <span id="herocount" class="mono"></span></div>
+  </div>
+  <p style="font-size:13px;color:#888;text-align:center;margin-top:10px">Illustrative simulation of swarm behavior, not a recording of model outputs.</p>
+</div>
+
+<!-- 01 -->
+<section id="problem">
+ <div class="in">
+  <div class="label">01 / The problem</div>
+  <h2>Multi-agent systems are organized by hand</h2>
+  <div class="prose">
+   <p class="lead">Today, when we run many language models at once, a person decides how they should be organized. One agent becomes the orchestrator and hands out subtasks. Others debate in rounds, or play assigned roles like "planner" and "critic."</p>
+   <p>These designs are reasonable guesses, but they are guesses, and they are fixed before the agents ever see the task. They also break in familiar ways: orchestrated systems duplicate work, flood each other with updates, and fail to reconcile subagents that disagree.</p>
+   <p>Human organizations adapt instead. How people divide labor and share information depends on the task, and much of that structure emerged through cultural evolution rather than anyone's design. Centrally planned economies struggled in part because no planner could gather everything the people doing the work knew. A fixed harness has the same problem.</p>
+   <p>The bitter lesson of AI is that learned behavior keeps overtaking behavior designed by hand. Reasoning models improved most by learning to reason through RL, not by following strategies written by people. <b>We think multi-agent organization works the same way.</b> If a central coordinator is the best way to solve a task, the swarm should learn to create one. If the task rewards specialization, agents should learn to divide the work.</p>
+  </div>
+  <figure>
+   <img src="assets/overview.png" alt="Left: multi-agent systems organized by static harnesses. Right: s3 agents decide for themselves when to work alone, share findings, or read messages.">
+   <figcaption><b>Figure 1 · Designed vs. learned organization.</b> Most systems use a harness designed in advance, such as a controller that assigns tasks or a leader that directs a forum. In s³, agents decide for themselves how long to work alone and when to share findings or read teammates' messages.</figcaption>
+  </figure>
+  <div class="callout"><b>Our claim.</b> To our knowledge, s³ is the first demonstration that cooperative multi-agent RL can train <b>asynchronous, role-free LLM swarms</b> whose learned coordination beats best-of-N sampling from solo agents trained with a matched budget, and keeps working with more agents than it was trained with.</div>
+ </div>
+</section>
+
+<!-- 02 -->
+<section class="dark" id="method">
+ <div class="in">
+  <div class="split">
+   <div>
+    <div class="label">02 / The method</div>
+    <h2>One model. One reward. No org chart.</h2>
+    <p class="lead">A swarm is N copies of one model. Each agent works on its own private copy of the task and never sees its teammates' reasoning or tool results.</p>
+    <p class="muted">The only way to coordinate is through what agents choose to tell each other. So learning to organize means learning to communicate: what to share, with whom, when, and when sharing is not worth its cost.</p>
+   </div>
+   <div>
+    <p>The whole team receives a single reward: success if <i>any</i> agent solves the task, minus a small cost for the share of the team's token allowance it used.</p>
+    <div class="eqbox">\[
+      R \;=\; {\color{#5fd3ab}S}\left(1 - {\color{#f5b04a}\lambda} \min\!\left(1, \frac{{\color{#9fc5ff}\sum_{i=1}^{N} \lvert\tau_i\rvert}}{N L}\right)\right)
+    \]</div>
+    <div class="eqlegend"><span style="color:#5fd3ab">team success (any agent)</span><span style="color:#f5b04a">token cost, λ = 0.25</span><span style="color:#9fc5ff">tokens used by the whole team</span></div>
+    <p style="margin-top:18px">For each problem we sample 8 independent team attempts. Every token from every member of team \(g\) receives the same advantage:</p>
+    <div class="eqbox">\[
+      A_g = \frac{{\color{#5fd3ab}R_g} - {\color{#f5b04a}\bar R}}{\sigma_R + \epsilon}
+    \]</div>
+    <div class="eqlegend"><span style="color:#5fd3ab">this team's reward</span><span style="color:#f5b04a">mean over the 8 teams on the same problem</span></div>
+   </div>
+  </div>
+
+  <div class="label" style="margin-top:56px">How it works</div>
+  <div class="steps">
+   <div class="step"><div class="n">01</div><h4>Give every agent a phone.</h4><p>Two tools: <code>message(to, text)</code> to one teammate or everyone, and <code>read_messages()</code>. No limit on messages, no reward for talking. Teammates get random, shuffled names so no conventions can be memorized.</p></div>
+   <div class="step"><div class="n">02</div><h4>Reward the team's best outcome.</h4><p>A sum would make bigger teams worth more just for being bigger. An average would reward each agent for being right alone, pushing agents to solve separately and then argue. The max rewards only what the team achieves.</p></div>
+   <div class="step"><div class="n">03</div><h4>Let teams compete, not teammates.</h4><p>GRPO with the team as the unit. We never estimate an agent's individual credit: comparing independent teams on the same problem does that. Helping a teammate win is reinforced.</p></div>
+  </div>
+ </div>
+</section>
+
+<!-- 03 -->
+<section id="infra">
+ <div class="in">
+  <div class="label">03 / Making it work</div>
+  <h2>The objective fits in two equations.<br>The systems took the rest.</h2>
+  <div class="prose">
+   <p class="lead">For RL to discover useful communication, an agent has to be able to act on a teammate's discovery <i>while it is still useful</i>. That one requirement shaped almost every design choice in our harness and trainer.</p>
+  </div>
+  <div class="cards">
+   <div class="card"><div class="k">asynchrony</div><h4>No turns, ever</h4><p>Each agent generates, calls tools, and resumes as soon as its own tool result returns. One agent can share a discovery while another waits on a tool, so the swarm never moves at the pace of its slowest member.</p></div>
+   <div class="card"><div class="k">notifications</div><h4>Interrupt politely</h4><p>When a message arrives, the harness inserts a notification listing unread counts by sender (never the contents). Idle agents wake immediately; busy agents see it as soon as their current request finishes. Reading is the agent's choice. Agents that stop calling tools go idle and spend no tokens.</p></div>
+   <div class="card"><div class="k">chunked generation</div><h4>Nobody hogs the server</h4><p>Swarm members share one inference server with limited sequence slots and KV-cache memory. We split generation into requests of at most 1,024 tokens that resume from the exact prefix, giving every agent a chance to progress and giving notifications a place to land, without adding turns or prompts.</p></div>
+   <div class="card"><div class="k">off-policy correction</div><h4>Train while you sample</h4><p>Inference keeps generating while the trainer updates, accepting rollouts up to 4 updates stale. Exploration inference also runs in FP8. We correct the mismatch with IcePop masking plus score centering, which removes the bias that masking alone compounds over training.</p></div>
+   <div class="card"><div class="k">loss masking</div><h4>Train only on what you wrote</h4><p>Messages from teammates, tool results, and notifications are in context but masked from the loss, so an agent is never trained to imitate another agent's words. We keep exact sampled tokens and log-probs across interruptions so importance ratios are exact.</p></div>
+   <div class="card"><div class="k">isolation</div><h4>No free lunches</h4><p>Each team attempt has its own message board. Each agent has its own random stream, so server ordering never changes its samples. Teams are weighted equally regardless of length. And maze door orders are identical for everyone, so diversity has to be learned.</p></div>
+  </div>
+  <h3>Fair comparisons are part of the infrastructure</h3>
+  <div class="prose">
+   <p>A swarm can look better simply because it runs more agents. Best-of-N sampling is a strong baseline that keeps improving with N. So every learner we compare sees the same problems, the same number of agent trajectories per update, the same per-agent token allowance, and the same optimizer. The solo baseline is trained as a single agent with that budget, and at evaluation we run N independent copies and count a success if any of them solves the problem.</p>
+  </div>
+ </div>
+</section>
+
+<!-- 04 -->
+<section class="dark" id="tasks">
+ <div class="in">
+  <div class="label">04 / Why these problems</div>
+  <h2>Two reasons groups beat individuals,<br>and why both get harder with scale</h2>
+  <p class="lead prose">Our tasks are deliberately simple, because each isolates a different reason teams are useful. As you add agents, they fail in opposite directions.</p>
+  <div class="tasks">
+   <div class="task">
+    <div class="trend down">▼ harder as N grows</div>
+    <h3>Information aggregation</h3>
+    <p>Each agent holds one private number, written in English ("forty-two"). The swarm must return all N numbers sorted. Sorting is trivial; the coordination is not: share your number, read everyone else's, track who owns what so repeats don't create duplicates, and submit only after hearing from everyone, with messages arriving in an unpredictable order.</p>
+    <div class="ex">Think of agents that each read different files in a codebase, each search different sources for a report, or sensors that each see part of a scene. The answer exists only once the pieces are combined, and more independent agents cannot substitute for that exchange.</div>
+    <div class="eqbox">\[ P_{\mathrm{coord}}(N) \le \min\!\left(1,\, N q^{N-1}\right) \]</div>
+    <p class="muted" style="font-size:15px">If each needed transfer succeeds with probability \(q&lt;1\), success eventually decays exponentially in N. An inbox can also be in \(2^{N-1}\) states: 8 with four agents, 32,768 with sixteen. Agents must learn a rule like "wait for N−1 distinct senders."</p>
+   </div>
+   <div class="task">
+    <div class="trend up">▲ baseline improves as N grows</div>
+    <h3>Decentralized exploration</h3>
+    <p>Each agent explores its own copy of an unknown tree of rooms: 3 doors per junction, corridors of ten moves, one exit among 27 dead ends, 391 rooms in total. A full depth-first search can take 780 moves, more than an agent can afford in its 8,192 tokens. The first agent out wins for everyone.</p>
+    <div class="ex">This is collaborative discovery: parallel research agents, distributed bug hunts, or the tens of thousands of agents recently pointed at a single math problem. Any searcher could succeed alone, but a team that shares findings can split the space and skip each other's dead ends.</div>
+    <div class="eqbox">\[ P_{\mathrm{search}}(N) = 1-(1-p)^N \]</div>
+    <p class="muted" style="font-size:15px">Independent best-of-N keeps getting stronger. Communication only earns its keep if it beats a baseline that rises with every agent you add.</p>
+   </div>
+  </div>
+<div class="demo-wrap" style="padding:0;margin-top:44px"><div class="label">Try it: the two tasks</div>
+  <div class="demo" id="demo">
+    <div class="bar">
+      <div class="tabs" role="tablist">
+        <button class="on" data-scene="agg">Information aggregation</button>
+        <button data-scene="exp">Decentralized exploration</button>
+      </div>
+      <div class="toggle" id="toggle"></div>
+    </div>
+    <svg id="stage" viewBox="0 0 1000 440" role="img" aria-label="Animated simulation of a swarm of agents messaging each other"></svg>
+    <div class="cap" id="cap"></div>
+  </div>
+  <p style="font-size:13px;color:#aaa;text-align:center;margin-top:10px">An illustrative simulation of the behaviors we observe in trained swarms (not a recording of model outputs).</p>
+</div>
+
+ </div>
+</section>
+
+<!-- 05 -->
+<section id="results">
+ <div class="in">
+  <div class="label">05 / Information aggregation</div>
+  <h2>Swarms learn to pool what they know</h2>
+  <div class="prose"><p class="lead">s³ learns reliable information aggregation, substantially outperforming controls trained with the same budget.</p></div>
+  <div class="stats">
+   <div class="stat"><div class="v g">93%</div><div class="d">s³ success with 4 agents</div></div>
+   <div class="stat"><div class="v">35%</div><div class="d">imitating its own successful swarms (online SFT)</div></div>
+   <div class="stat"><div class="v">13%</div><div class="d">each agent rewarded only for its own answer</div></div>
+  </div>
+  <figure class="narrow">
+   <img src="assets/aggregation_controls.png" alt="Bar chart of information aggregation success" loading="lazy">
+   <figcaption><b>Figure 2 · Held-out success at N = 4.</b> Mean ± SE across six seeds. All learners receive the same collection budget, so neither extra interaction nor extra successful examples explains the gap.</figcaption>
+  </figure>
+  <div class="prose"><p>s³ agents also talk less and more evenly. Each broadcasts its number about once, and all agents send about equally. The controls send more messages overall, but a few agents send most of them while the rest stay quiet.</p></div>
+  <figure>
+   <img src="assets/message_graphs.png" alt="Delivery concentration, reciprocity, and message counts for each method" loading="lazy">
+   <figcaption><b>Figure 3 · Communication structure</b> in final-policy episodes at N = 4. Concentration measures whether a few agents dominate sending; reciprocity measures how much communication flows both ways.</figcaption>
+  </figure>
+
+  <h3>Scaling past the training size</h3>
+  <div class="prose">
+   <p>We train with four agents and deploy up to sixteen without retraining. At <b>eight agents, twice the training size, s³ solves over 25× as many problems as the strongest baseline</b>, and its advantage persists through twelve. At sixteen every method struggles: the learned exchange transfers, but it cannot erase the exponentially growing difficulty of tracking everyone's information.</p>
+  </div>
+  <figure>
+   <img src="assets/scaling_comparison.png" alt="Success and token efficiency across evaluation swarm sizes" loading="lazy">
+   <figcaption><b>Figure 4 · Generalizing to bigger swarms.</b> Information aggregation (top) and decentralized exploration (bottom). Swarms train with four agents (dashed line). Token efficiency is solve rate divided by the fraction of the population's token budget used, failures included.</figcaption>
+  </figure>
+ </div>
+</section>
+
+<!-- 06 -->
+<section class="dark" id="emergence">
+ <div class="in">
+  <div class="label">06 / Emergence</div>
+  <h2>Watching a protocol form,<br>and a social dilemma appear</h2>
+  <div class="split">
+   <div>
+    <p class="lead">These learners start from the base model with no demonstrations, so we can watch coordination emerge purely from RL.</p>
+    <p>Early on, about half of swarms include an agent that never sends its number, and most of the rest hold direct-message conversations. Partway through, swarms switch to broadcasts, at first repeating them. By the end, <b>about 80% settle on exactly one broadcast per agent</b>, and agents learn to share <i>before</i> they read.</p>
+    <p class="muted">Why that protocol? Early in training, the few swarms that already broadcast once each succeed about 30 points more often than swarms on the same problem that converse via direct messages. The shared reward amplifies the difference until it takes over.</p>
+   </div>
+   <div>
+    <h3 style="margin-top:0;color:#fff">Individual rewards break cooperation</h3>
+    <p>When each agent is paid only for its own answer, sharing your number only helps your teammates. So every agent learns to wait for someone else to go first. More and more agents read before they send, and many eventually never send at all.</p>
+    <p>This is a <b>public goods game</b>: everyone would do better if all shared, but each agent is better off free-riding. When everyone waits, nobody shares. A shared reward dissolves the dilemma, because an agent gains whenever any teammate answers correctly.</p>
+    <p class="muted">Try the "Individual reward" toggle in the demo at the top of the page.</p>
+   </div>
+  </div>
+  <figure>
+   <img src="assets/training_analysis.png" alt="Training dynamics of communication structure, read-before-send rate, and exploration success by exit door" loading="lazy">
+   <figcaption><b>Figure 5 · How coordination changes during training.</b> (a) Aggregation swarms move from incomplete sharing, through repeated broadcasts, to one broadcast per agent. (b) Under individual rewards, agents increasingly read before sharing. (c) In exploration, communicating swarms succeed wherever the exit is hidden.</figcaption>
+  </figure>
+ </div>
+</section>
+
+<!-- 07 -->
+<section id="exploration">
+ <div class="in">
+  <div class="label">07 / Decentralized exploration</div>
+  <h2>Swarms learn to divide and conquer</h2>
+  <div class="prose">
+   <p class="lead">Here any agent can find the exit alone, so the question is whether talking helps beyond simply running more agents.</p>
+   <p>Both swarm and solo policies start from a short phase of supervised fine-tuning on scripted demonstrations of valid exploration (messages appear only in the swarm demonstrations), and RL then trains on harder, deeper mazes.</p>
+  </div>
+  <div class="stats">
+   <div class="stat"><div class="v g">−19 pts</div><div class="d">success lost when messaging is removed (4 agents)</div></div>
+   <div class="stat"><div class="v g">~½</div><div class="d">as many repeated rooms as non-communicating swarms</div></div>
+   <div class="stat"><div class="v g">4 ≈ 6</div><div class="d">four s³ agents nearly match six solo-trained agents</div></div>
+  </div>
+  <figure class="narrow">
+   <img src="assets/exploration_controls.png" alt="Bar chart of decentralized exploration success at N=4" loading="lazy">
+   <figcaption><b>Figure 6 · Held-out success at N = 4.</b> Removing communication while keeping the shared reward costs 19 percentage points.</figcaption>
+  </figure>
+  <div class="prose">
+   <p>Because every agent sees the doors listed in the same order, agents with similar habits all take the first door. Swarms that cannot communicate find the exit easily when it is behind that first door, and much less often when it is behind the third. s³ swarms succeed at about the same rate wherever the exit is, because agents <b>claim different branches and report the ones they have finished</b> (Figure 5c).</p>
+   <p>As swarms grow, communicating swarms reach high success sooner: four s³ agents nearly match six solo-trained agents, and six nearly match eight. At six agents, s³ beats best-of-six by about 7 percentage points with no statistically detectable loss in token efficiency. At the largest sizes independent search also approaches perfect success, so communication's main benefit is getting there with fewer agents.</p>
+  </div>
+ </div>
+</section>
+
+<!-- 08 -->
+<section class="dark" id="ingredients">
+ <div class="in">
+  <div class="label">08 / What drives the gains</div>
+  <h2>Ablations</h2>
+  <div class="steps">
+   <div class="step"><div class="n">shared reward</div><h4>Works for both kinds of coordination.</h4><p>In exploration, individual rewards do about as well as s³, since teammates' reports help each agent reach the exit itself. In aggregation, sending your number only helps others, and individual rewards collapse. Shared rewards handle both, which matters when you don't know a problem's structure in advance.</p></div>
+   <div class="step"><div class="n">communication</div><h4>Talking is doing real work.</h4><p>Keeping the team reward but removing messages drops four-agent exploration success by 19 points and roughly doubles repeated search. The gains come from coordinating, not just from the team objective.</p></div>
+   <div class="step"><div class="n">demonstrations</div><h4>Exploration needs a good start.</h4><p>Without fine-tuning on demonstrations, swarm and solo learners both stay far less successful, and the swarm has no significant edge. Demonstrations start both much higher, and RL keeps improving the swarm.</p></div>
+  </div>
+ </div>
+</section>
+
+<!-- 09 -->
+<section id="next">
+ <div class="in">
+  <div class="label">09 / What's next</div>
+  <h2>This is just the beginning</h2>
+  <div class="prose">
+   <p class="lead">We are now scaling s³ to larger models and more sophisticated tasks.</p>
+   <p>These experiments use two tasks and small models (Qwen3-0.6B for aggregation, Qwen3-1.7B for exploration), so there is a lot left to test. The training traces also point to concrete failure modes: agents sometimes submit a wrong answer despite having every number, repeat a teammate's search, or trust an unverified report. Training agents to track what their partners know, and whether those reports are justified, could make larger swarms more reliable without more communication.</p>
+   <p>The broader lesson is that <b>effective collaboration can be learned in the same process as task solving</b>. With a shared goal and infrastructure that lets agents act asynchronously, useful ways of exchanging information and dividing work develop on their own. Because they transfer to larger populations, training a small swarm can support scaling at inference. We are excited to see what learned self-organization unlocks for multi-agent systems as a whole.</p>
+  </div>
+  <div class="btns" style="justify-content:flex-start"><a class="btn" href="paper.pdf">Read the full paper</a></div>
+ </div>
+</section>
+
+<!-- citation -->
+<section id="citation" style="padding-top:20px">
+ <div class="in">
+  <div class="label">Citation</div>
+  <h2>Build on this work</h2>
+  <button class="copy" id="copybtn">Copy citation</button>
+<pre class="bib" id="bib">@article{jha2026s3,
+  title   = {s$^3$: Simple Scaling of Swarms via Cooperative Multi-agent RL},
+  author  = {Jha, Kunal and Faria, Gon{\c{c}}alo and Li, Shuyue Stella and Geng, Scott and
+             Brahman, Faeze and Smith, Noah A. and Tsvetkov, Yulia and
+             Kleiman-Weiner, Max and Jaques, Natasha},
+  journal = {Preprint},
+  year    = {2026},
+  url     = {https://scalingswarms.com}
+}</pre>
+ </div>
+</section>
+
+<footer>University of Washington &amp; Allen Institute for AI · Questions? <a class="mono" href="mailto:kjha@uw.edu">kjha@uw.edu</a> · <a href="https://kjha02.github.io/">kjha02.github.io</a></footer>
+
+<script>
+document.getElementById('copybtn').onclick=function(){
+  navigator.clipboard.writeText(document.getElementById('bib').innerText).then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy citation',1500)});
+};
+
+/* ===================== Swarm demo ===================== */
+(function(){
+const NS='http://www.w3.org/2000/svg';
+const svg=document.getElementById('stage'), cap=document.getElementById('cap'), tog=document.getElementById('toggle');
+const COLORS=['#029E73','#DE8F05','#0173B2','#CC78BC'];
+const WORDS=['one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen','twenty'];
+const TENS=['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
+function word(n){if(n<=20)return WORDS[n-1];const t=Math.floor(n/10),o=n%10;return TENS[t]+(o?'-'+WORDS[o-1]:'')}
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);(parent||svg).appendChild(e);return e}
+function txt(s,attrs,parent){const t=el('text',attrs,parent);t.textContent=s;return t}
+function rnd(a,b){return a+Math.random()*(b-a)}
+let scene='agg', mode='shared', raf=null, timers=[], t0=0;
+function later(ms,f){timers.push(setTimeout(f,ms))}
+function clear(){timers.forEach(clearTimeout);timers=[];if(raf)cancelAnimationFrame(raf);raf=null;while(svg.firstChild)svg.removeChild(svg.firstChild);}
+
+// cute agent icon
+function bot(x,y,color,name,parent,scale){
+  scale=scale||1;
+  const g=el('g',{transform:`translate(${x},${y}) scale(${scale})`},parent);
+  el('line',{x1:0,y1:-34,x2:0,y2:-46,stroke:'#555','stroke-width':2.5,'stroke-linecap':'round'},g);
+  const bulb=el('circle',{cx:0,cy:-49,r:5,fill:color},g);
+  el('rect',{x:-30,y:-34,width:60,height:54,rx:22,fill:color},g);
+  el('rect',{x:-21,y:-24,width:42,height:26,rx:11,fill:'#fff',opacity:.95},g);
+  const eyes=el('g',{},g);
+  el('circle',{cx:-9,cy:-11,r:4.2,fill:'#222'},eyes);el('circle',{cx:9,cy:-11,r:4.2,fill:'#222'},eyes);
+  el('circle',{cx:-7.6,cy:-12.6,r:1.4,fill:'#fff'},eyes);el('circle',{cx:10.4,cy:-12.6,r:1.4,fill:'#fff'},eyes);
+  const mouth=el('path',{d:'M-6 9 Q0 14 6 9',stroke:'#fff','stroke-width':2.5,fill:'none','stroke-linecap':'round'},g);
+  el('circle',{cx:-19,cy:6,r:3.5,fill:'#fff',opacity:.35},g);el('circle',{cx:19,cy:6,r:3.5,fill:'#fff',opacity:.35},g);
+  if(name)txt(name,{x:0,y:40,'text-anchor':'middle','font-size':13,'font-family':'ui-monospace,Menlo,monospace',fill:'#555'},g);
+  // blink
+  const blink=()=>{eyes.setAttribute('transform','translate(0,-11) scale(1,0.15) translate(0,11)');setTimeout(()=>eyes.removeAttribute('transform'),140)};
+  const iv=setInterval(()=>{if(!g.isConnected)return clearInterval(iv);if(Math.random()<.35)blink()},1400);
+  return {g,bulb,mouth,eyes};
+}
+function bubble(parent,x,y,text,opts){
+  opts=opts||{};
+  const g=el('g',{opacity:0},parent);
+  const t=txt(text,{x:x,y:y,'text-anchor':'middle','font-size':opts.size||13,fill:opts.color||'#222','font-family':'Arial,Helvetica,sans-serif','font-weight':opts.bold?700:400},g);
+  const w=Math.max(40,text.length*(opts.size||13)*0.56+20);
+  const r=el('rect',{x:x-w/2,y:y-(opts.size||13)-6,width:w,height:(opts.size||13)+14,rx:9,fill:opts.bg||'#fff',stroke:opts.stroke||'#d0d0d0'},g);
+  g.insertBefore(r,t);
+  fade(g,1,200);
+  return g;
+}
+function fade(node,to,ms){const from=+(node.getAttribute('opacity')||1);const s=performance.now();function f(n){const k=Math.min(1,(n-s)/ms);node.setAttribute('opacity',from+(to-from)*k);if(k<1)requestAnimationFrame(f)}requestAnimationFrame(f)}
+function fly(x1,y1,x2,y2,color,ms,done,parent){
+  const g=el('g',{},parent);
+  el('rect',{x:-11,y:-8,width:22,height:16,rx:2,fill:'#fff',stroke:color,'stroke-width':2},g);
+  el('path',{d:'M-11 -8 L0 2 L11 -8',fill:'none',stroke:color,'stroke-width':2},g);
+  const s=performance.now();
+  function f(n){const k=Math.min(1,(n-s)/ms);const e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;const x=x1+(x2-x1)*e, y=y1+(y2-y1)*e-Math.sin(Math.PI*k)*40;g.setAttribute('transform',`translate(${x},${y})`);if(k<1&&g.isConnected)requestAnimationFrame(f);else{g.remove();done&&done()}}
+  requestAnimationFrame(f);
+}
+function setCap(h){cap.innerHTML=h}
+function setToggle(opts){
+  tog.innerHTML='';
+  opts.forEach(o=>{const b=document.createElement('button');b.textContent=o.label;if(o.key===mode)b.className='on'+(o.bad?' bad':'');b.onclick=()=>{mode=o.key;start()};tog.appendChild(b)});
+}
+
+/* ---------- Scene A: information aggregation ---------- */
+function runAgg(){
+  setToggle([{key:'shared',label:'Shared reward (s³)'},{key:'indiv',label:'Individual reward',bad:true}]);
+  const layer=el('g',{});
+  txt('Each agent knows one private number. The team must submit all four, sorted.',{x:500,y:34,'text-anchor':'middle','font-size':15,fill:'#666'},layer);
+  const pos=[[110,160],[890,160],[110,340],[890,340]];
+  const names=[];const pool=[];while(names.length<4){const n='agent_'+Math.floor(rnd(1,65));if(!names.includes(n))names.push(n)}
+  const nums=[0,0,0,0].map(()=>Math.floor(rnd(1,100)));
+  const sorted=[...nums].sort((a,b)=>a-b);
+  const bots=[], inbox=[], lists=[];
+  // center board
+  el('rect',{x:395,y:170,width:210,height:150,rx:12,fill:'#fff',stroke:'#e2e2e2'},layer);
+  txt('team answer',{x:500,y:195,'text-anchor':'middle','font-size':12,fill:'#999','letter-spacing':1},layer);
+  const ans=txt('#### [ ?, ?, ?, ? ]',{x:500,y:250,'text-anchor':'middle','font-size':17,'font-family':'ui-monospace,Menlo,monospace',fill:'#999'},layer);
+  const verdict=txt('',{x:500,y:290,'text-anchor':'middle','font-size':16,'font-weight':700},layer);
+  pos.forEach((p,i)=>{
+    const b=bot(p[0],p[1],COLORS[i],names[i],layer);
+    bots.push(b);inbox.push(new Set([i]));
+    // number card
+    const side=p[0]<500?1:-1;
+    const cx=p[0]+side*150;
+    el('rect',{x:cx-80,y:p[1]-48,width:160,height:34,rx:7,fill:'#fff',stroke:COLORS[i],'stroke-width':1.5},layer);
+    txt('my number: '+word(nums[i]),{x:cx,y:p[1]-26,'text-anchor':'middle','font-size':12,fill:'#333'},layer);
+    const lst=txt('heard: '+nums[i],{x:cx,y:p[1]+10,'text-anchor':'middle','font-size':12,'font-family':'ui-monospace,Menlo,monospace',fill:'#777'},layer);
+    lists.push(lst);
+  });
+  function refresh(i){const arr=[...inbox[i]].map(j=>nums[j]).sort((a,b)=>a-b);lists[i].textContent='heard: '+arr.join(', ')+(inbox[i].size===4?' ✓':'');if(inbox[i].size===4)lists[i].setAttribute('fill','#029E73')}
+  if(mode==='shared'){
+    setCap('<b>Shared reward.</b> Each agent broadcasts its number once, early, without waiting to read first. Messages arrive asynchronously, and every agent assembles the full list.');
+    const order=[0,1,2,3].sort(()=>Math.random()-.5);
+    order.forEach((i,k)=>{
+      later(700+k*rnd(350,650),()=>{
+        const bb=bubble(layer,pos[i][0],pos[i][1]-70,'to all: "my number is '+word(nums[i])+'"',{size:12});
+        later(1300,()=>fade(bb,0,300));
+        [0,1,2,3].filter(j=>j!==i).forEach(j=>{
+          fly(pos[i][0],pos[i][1]-20,pos[j][0],pos[j][1]-20,COLORS[i],rnd(800,1300),()=>{
+            inbox[j].add(i);refresh(j);
+            if(inbox.every(s=>s.size===4)&&!verdict.textContent){
+              later(500,()=>{ans.textContent='#### ['+sorted.join(', ')+']';ans.setAttribute('fill','#222');verdict.textContent='✓ team solved it';verdict.setAttribute('fill','#029E73');bots.forEach(b=>b.mouth.setAttribute('d','M-8 7 Q0 17 8 7'));later(2600,start)});
+            }
+          },layer);
+        });
+      });
+    });
+  } else {
+    setCap('<b>Individual reward.</b> Sharing your number only helps your teammates, so each agent learns to read first and wait for someone else to go first. Nobody shares, and nobody can answer.');
+    pos.forEach((p,i)=>{
+      later(500+i*250,()=>{const bb=bubble(layer,p[0],p[1]-70,'read_messages() → (empty)',{size:12,color:'#777'});later(1400,()=>fade(bb,0,300))});
+      later(2200+i*250,()=>{const bb=bubble(layer,p[0],p[1]-70,'…waiting for others',{size:12,color:'#777'});later(1600,()=>fade(bb,0,300))});
+      later(4200+i*200,()=>{const bb=bubble(layer,p[0],p[1]-70,'read_messages() → (empty)',{size:12,color:'#777'});later(1300,()=>fade(bb,0,300))});
+    });
+    later(6000,()=>{ans.textContent='#### [ '+nums.map((n,i)=>'?').join(', ')+' ]';verdict.textContent='✗ no one shared';verdict.setAttribute('fill','#C44E52');bots.forEach(b=>b.mouth.setAttribute('d','M-6 12 Q0 7 6 12'));later(2600,start)});
+  }
+}
+
+/* ---------- Scene B: decentralized exploration ---------- */
+function runExp(){
+  setToggle([{key:'shared',label:'Messaging on (s³)'},{key:'nocomm',label:'Messaging off',bad:true}]);
+  const layer=el('g',{});
+  // tree: root -> 3 junctions -> 3 leaves each
+  const nodes=[{id:0,x:500,y:70,p:null,depth:0}];
+  const jx=[200,500,800];
+  for(let a=0;a<3;a++){nodes.push({id:1+a,x:jx[a],y:190,p:0,depth:1});}
+  for(let a=0;a<3;a++)for(let b=0;b<3;b++){nodes.push({id:4+a*3+b,x:jx[a]+(b-1)*95,y:330,p:1+a,depth:2,branch:a});}
+  const leaves=nodes.filter(n=>n.depth===2).map(n=>n.id);
+  // bias exit away from first door, like the hard cases in the paper
+  const exitBranch=Math.random()<.5?2:1;
+  const exitId=4+exitBranch*3+Math.floor(rnd(0,3));
+  nodes.forEach(n=>{if(n.p!==null){const p=nodes[n.p];el('line',{x1:p.x,y1:p.y,x2:n.x,y2:n.y,stroke:'#d8d8d8','stroke-width':6,'stroke-linecap':'round'},layer)}});
+  const leafMark={};
+  nodes.forEach(n=>{
+    const c=el('circle',{cx:n.x,cy:n.y,r:n.depth===2?15:12,fill:'#fff',stroke:'#cfcfcf','stroke-width':2},layer);
+    if(n.depth===2){leafMark[n.id]=c;}
+    if(n.depth===1)txt(['door 1','door 2','door 3'][n.id-1],{x:n.x+(n.id===1?-46:46),y:n.y+5,'text-anchor':'middle','font-size':12,fill:'#999'},layer);
+  });
+  txt('start',{x:500,y:42,'text-anchor':'middle','font-size':12,fill:'#999'},layer);
+  const exitStar=txt('★',{x:nodes[exitId].x,y:nodes[exitId].y+7,'text-anchor':'middle','font-size':20,fill:'#e6e6e6'},layer);
+  const status=txt('',{x:500,y:410,'text-anchor':'middle','font-size':16,'font-weight':700},layer);
+  function pathTo(from,to){ // tree path via parents
+    const up=a=>{const r=[a];while(nodes[a].p!==null){a=nodes[a].p;r.push(a)}return r};
+    const A=up(from),B=up(to);const common=A.find(x=>B.includes(x));
+    const p1=A.slice(0,A.indexOf(common)+1), p2=B.slice(0,B.indexOf(common)).reverse();
+    return p1.concat(p2).slice(1);
+  }
+  const N=4, agents=[];
+  const order=[[0,1,2],[1,2,0],[2,0,1],[0,1,2]];
+  for(let i=0;i<N;i++){
+    const b=bot(0,0,COLORS[i],null,layer,0.42);
+    const a={i,b,at:0,x:500,y:70,path:[],known:new Set(),visited:new Set(),claim:mode==='shared'?order[i][0]:0,reverse:mode==='shared'&&i===3,speed:rnd(.9,1.1)};
+    agents.push(a);
+  }
+  let done=false;
+  function dead(a){return a.known}
+  function nextTarget(a){
+    // candidate leaves not known dead
+    let cands=leaves.filter(l=>!a.known.has(l));
+    if(!cands.length)return null;
+    const prefer=mode==='shared'?order[a.i]:[0,1,2];
+    for(const br of prefer){
+      let inBr=cands.filter(l=>nodes[l].branch===br);
+      if(a.reverse&&br===prefer[0])inBr=inBr.reverse();
+      if(inBr.length)return inBr[0];
+    }
+    return cands[0];
+  }
+  function plan(a){const t=nextTarget(a);a.target=t;a.path=t==null?[]:pathTo(a.at,t)}
+  function broadcast(a,leaf){
+    if(mode!=='shared')return;
+    agents.filter(o=>o!==a).forEach(o=>{
+      fly(a.x,a.y-20,o.x,o.y-20,COLORS[a.i],rnd(600,900),()=>{o.known.add(leaf);if(o.target===leaf&&!done)plan(o)},layer);
+    });
+  }
+  if(mode==='shared'){
+    setCap('<b>Messaging on.</b> Agents announce which door they are taking and report dead ends, so the swarm splits the maze instead of retracing each other\'s steps.');
+    agents.forEach((a,k)=>later(200+k*250,()=>{const bb=bubble(layer,500+(k-1.5)*150,112,a.i===3?'I\'ll take door 1 from the far end':'taking door '+(order[a.i][0]+1),{size:11});later(1500,()=>fade(bb,0,300))}));
+  } else {
+    setCap('<b>Messaging off.</b> Every agent sees the doors in the same order, so they all walk down door 1 together. When the exit is behind another door, they waste most of their budget repeating the same search.');
+  }
+  agents.forEach(plan);
+  let last=performance.now();
+  const startDelay=performance.now()+1300;
+  function tick(now){
+    const dt=Math.min(50,now-last);last=now;
+    if(now>startDelay&&!done){
+      agents.forEach(a=>{
+        if(!a.path.length){plan(a);if(!a.path.length)return}
+        const nxt=nodes[a.path[0]];
+        const dx=nxt.x-a.x, dy=nxt.y-a.y, d=Math.hypot(dx,dy);
+        const step=0.16*dt*a.speed;
+        if(d<=step){
+          a.x=nxt.x;a.y=nxt.y;a.at=nxt.id;a.path.shift();
+          if(nxt.depth===2){
+            if(nxt.id===exitId){done=true;exitStar.setAttribute('fill','#DE8F05');a.b.mouth.setAttribute('d','M-8 7 Q0 17 8 7');status.textContent='★ '+(mode==='shared'?'exit found! the swarm split the search':'exit found, after lots of repeated work');status.setAttribute('fill',mode==='shared'?'#029E73':'#C44E52');later(2600,start);}
+            else if(!a.known.has(nxt.id)){a.known.add(nxt.id);leafMark[nxt.id].setAttribute('fill','#f1f1f1');leafMark[nxt.id].setAttribute('stroke',COLORS[a.i]);el('path',{d:`M${nxt.x-6} ${nxt.y-6} L${nxt.x+6} ${nxt.y+6} M${nxt.x+6} ${nxt.y-6} L${nxt.x-6} ${nxt.y+6}`,stroke:'#aaa','stroke-width':2.5},layer);broadcast(a,nxt.id);plan(a)}
+            else plan(a);
+          }
+        } else {a.x+=dx/d*step;a.y+=dy/d*step;}
+      });
+    }
+    agents.forEach((a,k)=>{const off=mode==='shared'?0:(k-1.5)*7;a.b.g.setAttribute('transform',`translate(${a.x+off},${a.y-6}) scale(0.42)`)});
+    if(svg.isConnected)raf=requestAnimationFrame(tick);
+  }
+  raf=requestAnimationFrame(tick);
+}
+
+/* ---------- Hero: open-ended collaborative discovery ---------- */
+(function hero(){
+  const H=document.getElementById('hero'), countEl=document.getElementById('herocount');
+  const W=1000,HT=430, LVLC=['#5fd3ab','#029E73','#0173B2','#DE8F05'];
+  let raf2=null, tms=[];
+  function hl(ms,f){tms.push(setTimeout(f,ms))}
+  function reset(){tms.forEach(clearTimeout);tms=[];if(raf2)cancelAnimationFrame(raf2);while(H.firstChild)H.removeChild(H.firstChild);run()}
+  function gem(parent,x,y,lvl){
+    const g=el('g',{transform:`translate(${x},${y}) scale(0)`},parent);
+    const r=7+lvl*2.5;
+    el('circle',{r:r+7,fill:LVLC[lvl],opacity:.18},g);
+    el('path',{d:`M0 ${-r} L${r*.85} 0 L0 ${r} L${-r*.85} 0 Z`,fill:LVLC[lvl],stroke:'#fff','stroke-width':1.5},g);
+    el('path',{d:`M0 ${-r} L${r*.3} 0 L0 ${r}`,fill:'#fff',opacity:.35},g);
+    const s=performance.now();(function f(n){const k=Math.min(1,(n-s)/450);const e=1+2.2*Math.pow(k-1,3)+1.2*Math.pow(k-1,2);g.setAttribute('transform',`translate(${x},${y}) scale(${Math.max(0,e)})`);if(k<1)requestAnimationFrame(f)})(s);
+    return g;
+  }
+  function run(){
+    const bg=el('g',{},H), trail=el('g',{},H), edges=el('g',{},H), gems=el('g',{},H), mid=el('g',{},H), top=el('g',{},H);
+    // dotted field
+    for(let x=20;x<W;x+=28)for(let y=20;y<HT;y+=28)el('circle',{cx:x,cy:y,r:1.4,fill:'#d9d9d4'},bg);
+    // hidden discoveries: seeds, then follow-ups that can only be found by agents who know the parent
+    const F=[];
+    const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+    const seeds=[[150,110],[420,320],[640,120],[860,300]].map(([x,y])=>[x+rnd(-50,50),y+rnd(-40,40)]);
+    seeds.forEach(([x,y])=>{
+      const s={id:F.length,x,y,lvl:0,parent:null};F.push(s);
+      const nk=2;for(let c=0;c<nk;c++){
+        const ang=rnd(0,Math.PI*2);const ch={id:F.length,x:clamp(x+Math.cos(ang)*rnd(70,100),40,W-40),y:clamp(y+Math.sin(ang)*rnd(60,90),40,HT-40),lvl:1,parent:s.id};F.push(ch);
+        if(Math.random()<.8){const a2=ang+rnd(-.9,.9);const g2={id:F.length,x:clamp(ch.x+Math.cos(a2)*rnd(65,90),40,W-40),y:clamp(ch.y+Math.sin(a2)*rnd(55,80),40,HT-40),lvl:2,parent:ch.id};F.push(g2);
+          if(c===0&&Math.random()<.7){const a3=a2+rnd(-.8,.8);F.push({id:F.length,x:clamp(g2.x+Math.cos(a3)*rnd(60,85),40,W-40),y:clamp(g2.y+Math.sin(a3)*rnd(50,75),40,HT-40),lvl:3,parent:g2.id})}}
+      }
+    });
+    // cross-links: some deep finds need knowledge from a second branch too
+    F.forEach(f=>f.found=false);
+    let nFound=0;
+    const names=[];while(names.length<5){const n='agent_'+Math.floor(rnd(1,65));if(!names.includes(n))names.push(n)}
+    const COL=['#029E73','#DE8F05','#0173B2','#CC78BC','#C44E52'];
+    const A=[];
+    for(let i=0;i<5;i++){
+      const b=bot(0,0,COL[i],null,top,0.38);
+      const tag=txt(names[i],{x:0,y:0,'text-anchor':'middle','font-size':11,'font-family':'ui-monospace,Menlo,monospace',fill:'#888'},top);
+      A.push({i,b,tag,x:rnd(80,W-80),y:rnd(60,HT-60),tx:0,ty:0,known:new Set(),speed:rnd(.07,.095),lastTrail:{x:-99,y:-99},say:null,busyUntil:0});
+    }
+    function newTarget(a){
+      // follow up on a known discovery that may have unexplored follow-ups, otherwise explore somewhere new
+      const frontier=[...a.known].map(id=>F[id]).filter(f=>F.some(c=>c.parent===f.id&&!c.found));
+      if(frontier.length&&Math.random()<.75){const f=frontier[Math.floor(Math.random()*frontier.length)];const ang=rnd(0,Math.PI*2),r=rnd(50,100);a.tx=clamp(f.x+Math.cos(ang)*r,30,W-30);a.ty=clamp(f.y+Math.sin(ang)*r,30,HT-30);}
+      else{let best=null,bs=-1;for(let k=0;k<8;k++){const x=rnd(40,W-40),y=rnd(40,HT-40);let s=Math.min(...A.map(o=>o===a?1e9:Math.hypot(o.tx-x,o.ty-y)));if(s>bs){bs=s;best=[x,y]}}a.tx=best[0];a.ty=best[1];}
+    }
+    function speak(a,text,ms){if(a.say)a.say.remove();a.say=bubble(mid,a.x,a.y-30,text,{size:11.5});const s=a.say;hl(ms||1700,()=>{if(s.isConnected){fade(s,0,300);hl(320,()=>s.remove())}})}
+    function discover(a,f){
+      f.found=true;f.by=a.i;nFound++;a.known.add(f.id);
+      gem(gems,f.x,f.y,f.lvl);
+      if(f.parent!==null){const p=F[f.parent];const ln=el('line',{x1:p.x,y1:p.y,x2:f.x,y2:f.y,stroke:LVLC[f.lvl],'stroke-width':2.5,'stroke-dasharray':'4 4',opacity:0},edges);fade(ln,.9,500)}
+      const p=f.parent!==null?F[f.parent]:null;
+      speak(a,f.lvl===0?'found a lead! 📡 sharing':(p&&p.by!==a.i?'built on '+names[p.by]+"'s find ✨":'going deeper here ⛏️'));
+      countEl.textContent='· discoveries: '+nFound+' / '+F.length;
+      A.filter(o=>o!==a).forEach(o=>{
+        fly(a.x,a.y-12,o.x,o.y-12,COL[a.i],rnd(700,1200),()=>{
+          o.known.add(f.id);
+          if(F.some(c=>c.parent===f.id&&!c.found)&&Math.random()<.45&&performance.now()>o.busyUntil){
+            o.busyUntil=performance.now()+3000;const ang=rnd(0,Math.PI*2);o.tx=clamp(f.x+Math.cos(ang)*70,30,W-30);o.ty=clamp(f.y+Math.sin(ang)*70,30,HT-30);
+            speak(o,'on it, following up '+names[a.i]+'!',1500);
+          }
+        },top);
+      });
+      if(nFound===F.length){hl(900,()=>{const b=bubble(top,500,HT/2,'swarm mapped everything together 🎉',{size:16,bold:true,stroke:'#029E73'});});hl(4200,reset)}
+    }
+    A.forEach(newTarget);
+    let last=performance.now();
+    function tick(now){
+      const dt=Math.min(40,now-last);last=now;
+      A.forEach(a=>{
+        const dx=a.tx-a.x,dy=a.ty-a.y,d=Math.hypot(dx,dy),st=a.speed*dt;
+        if(d<st)newTarget(a);else{a.x+=dx/d*st;a.y+=dy/d*st+Math.sin(now/180+a.i)*.15}
+        if(Math.hypot(a.x-a.lastTrail.x,a.y-a.lastTrail.y)>22){a.lastTrail={x:a.x,y:a.y};const c=el('circle',{cx:a.x,cy:a.y,r:22,fill:COL[a.i],opacity:.035},trail);if(trail.childNodes.length>260)trail.removeChild(trail.firstChild)}
+        F.forEach(f=>{if(!f.found&&Math.hypot(f.x-a.x,f.y-a.y)<30&&(f.parent===null||a.known.has(f.parent)))discover(a,f)});
+        a.b.g.setAttribute('transform',`translate(${a.x},${a.y}) scale(0.38)`);
+        a.tag.setAttribute('x',a.x);a.tag.setAttribute('y',a.y+22);
+      });
+      if(H.isConnected)raf2=requestAnimationFrame(tick);
+    }
+    countEl.textContent='· discoveries: 0 / '+F.length;
+    raf2=requestAnimationFrame(tick);
+  }
+  run();
+})();
+
+function start(){clear();if(scene==='agg')runAgg();else runExp();}
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');scene=b.dataset.scene;mode='shared';start()});
+start();
+})();
+</script>
+</body>
+</html>
