@@ -253,7 +253,7 @@ figcaption{font-family:var(--sans);font-style:normal;font-size:14.5px}
 <section id="problem">
  <div class="in">
   <div class="label">01 / Motivation</div>
-  <h2>Multi-agent systems are organized by hand</h2>
+  <h2>Why should multi-agent organization be learned?</h2>
   <p class="lead">Most multi-agent systems fix their structure in advance: an orchestrator hands out subtasks, agents debate in rounds, or each gets a role like planner or critic.</p>
   <p>These structures don't adapt to the task, and they break in familiar ways: duplicated work, too many messages, and subagents that never reconcile. In AI, learned behavior has repeatedly beaten hand-designed behavior. We think the same should hold for how agents organize.</p>
   <figure class="wide">
@@ -268,7 +268,7 @@ figcaption{font-family:var(--sans);font-style:normal;font-size:14.5px}
 <section class="dark" id="method">
  <div class="in">
   <div class="label">02 / Method</div>
-  <h2>Copies of one model, one shared reward</h2>
+  <h2>Training swarms with a shared team reward</h2>
   <p class="lead">A swarm is N copies of one model. Each agent works on its own copy of the task and can only coordinate through the messages it chooses to send.</p>
   <p>The team succeeds if any agent solves the task, with a small cost for the share of the token budget it used:</p>
   <div class="eqbox">\[
@@ -282,7 +282,7 @@ figcaption{font-family:var(--sans);font-style:normal;font-size:14.5px}
   <div class="eqlegend"><span style="color:#029E73">this team's reward</span><span style="color:#DE8F05">average over teams on the same problem</span></div>
   <div class="steps">
    <div class="step"><div class="n">01</div><h4>Two messaging tools</h4><p><code>message(to, text)</code> and <code>read_messages()</code>. No limit on messages and no reward for sending them.</p></div>
-   <div class="step"><div class="n">02</div><h4>Best outcome, not sum</h4><p>A sum rewards bigger teams for being bigger. An average rewards agents for being right alone.</p></div>
+   <div class="step"><div class="n">02</div><h4>Best outcome, not sum</h4><p>A sum rewards bigger teams for being bigger. An average rewards each agent for being right, so agents solve separately and argue toward consensus.</p></div>
    <div class="step"><div class="n">03</div><h4>Compare teams</h4><p>We never estimate each agent's credit. Comparing teams on the same problem handles it, including credit for helping.</p></div>
   </div>
  </div>
@@ -292,7 +292,7 @@ figcaption{font-family:var(--sans);font-style:normal;font-size:14.5px}
 <section id="infra">
  <div class="in">
   <div class="label">03 / Infrastructure</div>
-  <h2>What it took to make training work</h2>
+  <h2>Asynchronous infrastructure for multi-agent RL</h2>
   <p class="lead">For RL to discover useful communication, an agent has to be able to act on a teammate's discovery while it still matters. That shaped most of our design.</p>
   <div class="cards">
    <div class="card"><div class="k">asynchrony</div><h4>No turns</h4><p>Agents continue as soon as their own tool call returns, so no one waits on the slowest teammate.</p></div>
@@ -309,7 +309,7 @@ figcaption{font-family:var(--sans);font-style:normal;font-size:14.5px}
 <section class="dark" id="tasks">
  <div class="in">
   <div class="label">04 / Tasks</div>
-  <h2>Two reasons groups help</h2>
+  <h2>When should a swarm beat independent agents?</h2>
   <p class="lead">Each task isolates one reason a team beats an individual, and they get harder in opposite ways as the swarm grows.</p>
   <div class="tasks">
    <div class="task">
@@ -349,7 +349,7 @@ figcaption{font-family:var(--sans);font-style:normal;font-size:14.5px}
 <section id="results">
  <div class="in">
   <div class="label">05 / Information aggregation</div>
-  <h2>Swarms learn to share what they know</h2>
+  <h2>Can swarms learn to aggregate private information?</h2>
   <div class="stats">
    <div class="stat"><div class="v g">93%</div><div class="d">s³ with 4 agents</div></div>
    <div class="stat"><div class="v">35%</div><div class="d">imitating successful swarms</div></div>
@@ -360,7 +360,7 @@ figcaption{font-family:var(--sans);font-style:normal;font-size:14.5px}
    <figcaption><b>Figure 2.</b> Held-out success with four agents (mean ± SE over six seeds). All learners get the same training budget.</figcaption>
   </figure>
   <p>s³ agents also talk less: each broadcasts its number about once, and everyone sends about equally. In the controls, a few agents do most of the talking.</p>
-  <h3>Bigger swarms than we trained</h3>
+  <h3>Do these gains extend to larger numbers of agents?</h3>
   <p>We train with four agents and evaluate with up to sixteen. With <b>eight agents, s³ solves over 25× as many problems as the strongest baseline</b>, and stays ahead through twelve. At sixteen, every method struggles.</p>
   <figure class="chart">
    <div class="chost" id="chart-agg-scale"></div>
@@ -373,14 +373,14 @@ figcaption{font-family:var(--sans);font-style:normal;font-size:14.5px}
 <section class="dark" id="emergence">
  <div class="in">
   <div class="label">06 / Emergence</div>
-  <h2>What changes during training</h2>
+  <h2>How organization emerges in decentralized swarms</h2>
   <p class="lead">These agents start with no demonstrations, so their coordination comes entirely from RL.</p>
   <p>Early on, many swarms have an agent that never shares. Swarms then move to direct messages, then repeated broadcasts, and by the end <b>about 80% settle on one broadcast per agent</b>, sent before reading.</p>
-  <h3>Individual rewards create a social dilemma</h3>
+  <h3>Why do individual rewards fail?</h3>
   <p>If each agent is rewarded only for its own answer, sharing only helps others. Each agent learns to wait for someone else to go first, and eventually nobody shares. It's a public goods game, and a shared reward removes it.</p>
   <figure class="chart">
    <div class="chost" id="chart-train"></div>
-   <figcaption><b>Figure 4.</b> Solve rate during training (smoothed). With individual rewards, agents briefly improve, then stop sharing and get worse.</figcaption>
+   <figcaption><b>Figure 4.</b> Training solve rate (9-step moving average; one run per condition, so no error bars). With individual rewards, agents briefly improve, then stop sharing and get worse.</figcaption>
   </figure>
   <figure class="wide">
    <img src="assets/training_analysis.png" alt="Training dynamics of communication structure, read-before-send rate, and exploration success by exit door" loading="lazy">
@@ -393,7 +393,7 @@ figcaption{font-family:var(--sans);font-style:normal;font-size:14.5px}
 <section id="exploration">
  <div class="in">
   <div class="label">07 / Decentralized exploration</div>
-  <h2>Swarms learn to split up the search</h2>
+  <h2>Does learned coordination improve decentralized exploration?</h2>
   <div class="stats">
    <div class="stat"><div class="v g">−19 pts</div><div class="d">with messaging turned off</div></div>
    <div class="stat"><div class="v g">~½</div><div class="d">the repeated search</div></div>
@@ -415,7 +415,7 @@ figcaption{font-family:var(--sans);font-style:normal;font-size:14.5px}
 <section class="dark" id="ingredients">
  <div class="in">
   <div class="label">08 / Ablations</div>
-  <h2>What matters</h2>
+  <h2>Which ingredients of s³ drive its gains?</h2>
   <div class="steps">
    <div class="step"><div class="n">shared reward</div><h4>Works for both tasks</h4><p>Individual rewards are fine for exploration but collapse in aggregation, where sharing only helps others.</p></div>
    <div class="step"><div class="n">communication</div><h4>Messages do real work</h4><p>Turning messaging off costs 19 points and roughly doubles repeated search.</p></div>
@@ -427,8 +427,8 @@ figcaption{font-family:var(--sans);font-style:normal;font-size:14.5px}
 <!-- 09 -->
 <section id="next">
  <div class="in">
-  <div class="label">09 / Next steps</div>
-  <h2>Where this goes next</h2>
+  <div class="label">09 / Discussion</div>
+  <h2>Discussion and next steps</h2>
   <p class="lead">We're scaling s³ to larger models and more sophisticated tasks.</p>
   <p>So far we use small models (Qwen3-0.6B and 1.7B) on two tasks. The traces point to clear next problems: agents sometimes ignore information they have, repeat a teammate's search, or trust unchecked reports.</p>
   <p>Our main takeaway is that agents can learn to collaborate in the same training process where they learn the task, and that this carries over to larger swarms. We're excited to see what it makes possible for multi-agent systems.</p>
@@ -440,7 +440,7 @@ figcaption{font-family:var(--sans);font-style:normal;font-size:14.5px}
 <section id="citation" style="padding-top:20px">
  <div class="in">
   <div class="label">Citation</div>
-  <h2>Build on this work</h2>
+  <h2>Citation</h2>
   <button class="copy" id="copybtn">Copy citation</button>
 <pre class="bib" id="bib">@article{jha2026s3,
   title   = {s$^3$: Simple Scaling of Swarms via Cooperative Multi-agent RL},
@@ -883,7 +883,7 @@ function onVisible(node,fn){if(reduce||!('IntersectionObserver' in window)){fn(t
 
 function lineChart(id,series,o){
   const host=document.getElementById(id);if(!host)return;
-  const W=o.w||640,H=o.h||340,m={l:46,r:o.direct===false?18:(o.rpad||136),t:28,b:44};
+  const W=o.w||640,H=o.h||350,m={l:46,r:o.direct===false?18:(o.rpad||136),t:40,b:44};
   const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,class:'csvg',role:'img','aria-label':o.aria},host);
   const xs=v=>m.l+(v-o.x0)/(o.x1-o.x0)*(W-m.l-m.r), ys=v=>H-m.b-v/o.y1*(H-m.t-m.b);
   const grid=el('g',{},svg);
@@ -892,14 +892,14 @@ function lineChart(id,series,o){
   el('line',{x1:m.l,x2:W-m.r,y1:H-m.b,y2:H-m.b,class:'caxis'},grid);
   tx(o.xl,{x:(m.l+W-m.r)/2,y:H-6,'text-anchor':'middle',class:'clabel'},grid);
   tx(o.yl,{x:4,y:12,class:'clabel'},grid);
-  let mkl=null;if(o.mark!=null){el('line',{x1:xs(o.mark),x2:xs(o.mark),y1:m.t,y2:H-m.b,class:'cmark'},grid);mkl=tx(o.markLabel,{x:xs(o.mark)+5,y:H-m.b-8,class:'ctick chalo'},svg)}
+  let mkl=null;if(o.mark!=null){el('line',{x1:xs(o.mark),x2:xs(o.mark),y1:m.t-2,y2:H-m.b,class:'cmark'},grid);mkl=tx(o.markLabel,{x:xs(o.mark),y:m.t-8,'text-anchor':'middle',class:'ctick chalo'},svg)}
   const cid=id+'-clip';const cp=el('clipPath',{id:cid},el('defs',{},svg));const cr=el('rect',{x:0,y:0,width:reduce?W:m.l,height:H},cp);
   const data=el('g',{'clip-path':`url(#${cid})`},svg);
   const labels=[];
   series.forEach(s=>{
     const P=s.pts.map((p,i)=>o.xy?[xs(p[0]),ys(p[1]),p[1],null,p[0]]:[xs(N[i]),ys(p[0]),p[0],p[1],N[i]]);
     el('path',{d:'M'+P.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join('L'),fill:'none',stroke:s.color,'stroke-width':2.2,'stroke-dasharray':s.dash||'','stroke-linejoin':'round'},data);
-    if(!o.xy)P.forEach(p=>{if(p[3]>0.3)el('line',{x1:p[0],x2:p[0],y1:ys(Math.min(o.y1,p[2]+p[3])),y2:ys(Math.max(0,p[2]-p[3])),stroke:s.color,'stroke-width':1.4,opacity:.7},data);el('circle',{cx:p[0],cy:p[1],r:4,fill:s.color,stroke:'#fff','stroke-width':2},data)});
+    if(!o.xy)P.forEach(p=>{el('circle',{cx:p[0],cy:p[1],r:3.4,fill:s.color,stroke:'#fff','stroke-width':1.5},data);if(p[3]>0){const a=ys(Math.min(o.y1,p[2]+p[3])),b=ys(Math.max(0,p[2]-p[3]));el('path',{d:`M${p[0]} ${a}V${b}M${p[0]-4.5} ${a}H${p[0]+4.5}M${p[0]-4.5} ${b}H${p[0]+4.5}`,stroke:s.color,'stroke-width':1.6,fill:'none'},data)}});
     s._P=P;labels.push({s,y:P[P.length-1][1],x:P[P.length-1][0]});
   });
   // direct labels at line ends, nudged apart
