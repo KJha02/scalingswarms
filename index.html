@@ -495,9 +495,9 @@ function runAgg(){
   const sorted=[...nums].sort((a,b)=>a-b);
   const bots=[], inbox=[], lists=[];
   // center board
-  el('rect',{x:395,y:170,width:210,height:150,rx:12,fill:'#fff',stroke:'#e2e2e2'},layer);
+  el('rect',{x:360,y:170,width:280,height:150,rx:12,fill:'#fff',stroke:'#e2e2e2'},layer);
   txt('team answer',{x:500,y:195,'text-anchor':'middle','font-size':12,fill:'#999','letter-spacing':1},layer);
-  const ans=txt('#### [ ?, ?, ?, ? ]',{x:500,y:250,'text-anchor':'middle','font-size':17,'font-family':'ui-monospace,Menlo,monospace',fill:'#999'},layer);
+  const ans=txt('#### [ ?, ?, ?, ? ]',{x:500,y:250,'text-anchor':'middle','font-size':15,'font-family':'ui-monospace,Menlo,monospace',fill:'#999'},layer);
   const verdict=txt('',{x:500,y:290,'text-anchor':'middle','font-size':16,'font-weight':700},layer);
   pos.forEach((p,i)=>{
     const b=bot(p[0],p[1],COLORS[i],names[i],layer);
@@ -539,91 +539,77 @@ function runAgg(){
   }
 }
 
-/* ---------- Scene B: decentralized exploration ---------- */
+/* ---------- Scene B: decentralized exploration (relay search) ---------- */
 function runExp(){
   setToggle([{key:'shared',label:'Messaging on (s³)'},{key:'nocomm',label:'Messaging off',bad:true}]);
   const layer=el('g',{});
-  // tree: root -> 3 junctions -> 3 leaves each
-  const nodes=[{id:0,x:500,y:70,p:null,depth:0}];
-  const jx=[200,500,800];
-  for(let a=0;a<3;a++){nodes.push({id:1+a,x:jx[a],y:190,p:0,depth:1});}
-  for(let a=0;a<3;a++)for(let b=0;b<3;b++){nodes.push({id:4+a*3+b,x:jx[a]+(b-1)*95,y:330,p:1+a,depth:2,branch:a});}
-  const leaves=nodes.filter(n=>n.depth===2).map(n=>n.id);
-  // bias exit away from first door, like the hard cases in the paper
-  const exitBranch=Math.random()<.5?2:1;
-  const exitId=4+exitBranch*3+Math.floor(rnd(0,3));
-  nodes.forEach(n=>{if(n.p!==null){const p=nodes[n.p];el('line',{x1:p.x,y1:p.y,x2:n.x,y2:n.y,stroke:'#d8d8d8','stroke-width':6,'stroke-linecap':'round'},layer)}});
-  const leafMark={};
-  nodes.forEach(n=>{
-    const c=el('circle',{cx:n.x,cy:n.y,r:n.depth===2?15:12,fill:'#fff',stroke:'#cfcfcf','stroke-width':2},layer);
-    if(n.depth===2){leafMark[n.id]=c;}
-    if(n.depth===1)txt(['door 1','door 2','door 3'][n.id-1],{x:n.x+(n.id===1?-46:46),y:n.y+5,'text-anchor':'middle','font-size':12,fill:'#999'},layer);
-  });
-  txt('start',{x:500,y:42,'text-anchor':'middle','font-size':12,fill:'#999'},layer);
-  const exitStar=txt('★',{x:nodes[exitId].x,y:nodes[exitId].y+7,'text-anchor':'middle','font-size':20,fill:'#e6e6e6'},layer);
-  const status=txt('',{x:500,y:410,'text-anchor':'middle','font-size':16,'font-weight':700},layer);
-  function pathTo(from,to){ // tree path via parents
-    const up=a=>{const r=[a];while(nodes[a].p!==null){a=nodes[a].p;r.push(a)}return r};
-    const A=up(from),B=up(to);const common=A.find(x=>B.includes(x));
-    const p1=A.slice(0,A.indexOf(common)+1), p2=B.slice(0,B.indexOf(common)).reverse();
-    return p1.concat(p2).slice(1);
-  }
-  const N=4, agents=[];
-  const order=[[0,1,2],[1,2,0],[2,0,1],[0,1,2]];
-  for(let i=0;i<N;i++){
-    const b=bot(0,0,COLORS[i],null,layer,0.42);
-    const a={i,b,at:0,x:500,y:70,path:[],known:new Set(),visited:new Set(),claim:mode==='shared'?order[i][0]:0,reverse:mode==='shared'&&i===3,speed:rnd(.9,1.1)};
-    agents.push(a);
-  }
-  let done=false;
-  function dead(a){return a.known}
-  function nextTarget(a){
-    // candidate leaves not known dead
-    let cands=leaves.filter(l=>!a.known.has(l));
-    if(!cands.length)return null;
-    const prefer=mode==='shared'?order[a.i]:[0,1,2];
-    for(const br of prefer){
-      let inBr=cands.filter(l=>nodes[l].branch===br);
-      if(a.reverse&&br===prefer[0])inBr=inBr.reverse();
-      if(inBr.length)return inBr[0];
+  txt("Find the hidden goal ★. Each agent searches its own region; every find is a clue pointing into a teammate's.",{x:500,y:28,'text-anchor':'middle','font-size':14.5,fill:'#666'},layer);
+  const R=[[30,44,462,150],[508,44,462,150],[30,204,462,150],[508,204,462,150]];
+  const names=[];while(names.length<4){const n='agent_'+Math.floor(rnd(1,65));if(!names.includes(n))names.push(n)}
+  R.forEach((r,i)=>{el('rect',{x:r[0],y:r[1],width:r[2],height:r[3],rx:12,fill:COLORS[i],opacity:.05,stroke:COLORS[i],'stroke-opacity':.35,'stroke-dasharray':'5 5'},layer);txt(names[i]+"'s region",{x:r[0]+12,y:r[1]+18,'font-size':11.5,fill:COLORS[i],'font-family':'ui-monospace,Menlo,monospace'},layer)});
+  const trail=el('g',{},layer), chainG=el('g',{},layer), gemsG=el('g',{},layer), botsG=el('g',{},layer), fx=el('g',{},layer);
+  const perm=[0,1,2,3].sort(()=>Math.random()-.5);
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  const clues=perm.map((ri,k)=>{const r=R[ri];const y=k===3?r[1]+67:k===0?r[1]+45:r[1]+[45,90,130][Math.floor(rnd(0,3))];const x=k===0?rnd(r[0]+90,r[0]+170):rnd(r[0]+60,r[0]+r[2]-60);return{k,region:ri,x,y,found:false}});
+  const corner=c=>{const r=R[c.region];return (c.y<r[1]+r[3]/2?'north':'south')+(c.x<r[0]+r[2]/2?'west':'east')};
+  // chain panel
+  const slots=['clue 1','clue 2','clue 3','goal ★'];
+  const slotEls=slots.map((s,k)=>{const x=210+k*160;const g=el('g',{},layer);const rc=el('rect',{x:x-62,y:368,width:124,height:46,rx:8,fill:'#fff',stroke:'#ddd'},g);txt(s,{x,y:387,'text-anchor':'middle','font-size':12,fill:'#999'},g);const who=txt('not found',{x,y:404,'text-anchor':'middle','font-size':11,fill:'#bbb','font-family':'ui-monospace,Menlo,monospace'},g);if(k<3)txt('→',{x:x+80,y:396,'text-anchor':'middle','font-size':18,fill:'#ccc'},layer);return{rc,who}});
+  // budget
+  txt('time',{x:30,y:386,'font-size':11,fill:'#999'},layer);
+  const clock=txt('0.0s',{x:30,y:410,'font-size':22,'font-weight':700,fill:'#333','font-family':'ui-monospace,Menlo,monospace'},layer);
+  const status=txt('',{x:870,y:396,'text-anchor':'middle','font-size':13,'font-weight':700},layer);
+  // agents with lawnmower sweeps of their own region
+  const A=[0,1,2,3].map(i=>{const r=R[i];const rows=[r[1]+45,r[1]+90,r[1]+130,r[1]+110,r[1]+67];const wps=[];rows.forEach((y,j)=>{const xs=[r[0]+35,r[0]+r[2]-35];if(j%2)xs.reverse();xs.forEach(x=>wps.push([x,y]))});
+    const b=bot(0,0,COLORS[i],null,botsG,0.4);
+    return{i,b,x:wps[0][0],y:wps[0][1],wps,wi:1,knows:new Set(),target:null,speed:.085,swept:false}});
+  let t0=performance.now(), over=false;
+  function pulse(x,y,c){const ring=el('circle',{cx:x,cy:y,r:10,fill:'none',stroke:c,'stroke-width':2.5},fx);const s=performance.now();(function f(n){const k=Math.min(1,(n-s)/700);ring.setAttribute('r',10+k*60);ring.setAttribute('opacity',1-k);if(k<1)requestAnimationFrame(f);else ring.remove()})(s)}
+  function say(a,text,ms,opt){const bb=bubble(fx,a.x,a.y-26,text,Object.assign({size:11.5},opt||{}));later(ms||1900,()=>{fade(bb,0,300);later(320,()=>bb.remove())})}
+  function finish(ok,msg){if(over)return;over=true;status.textContent=msg;status.setAttribute('fill',ok==='slow'?'#DE8F05':ok?'#029E73':'#C44E52');later(3600,start)}
+  function found(a,c){
+    c.found=true;
+    const g=el('g',{transform:`translate(${c.x},${c.y})`},gemsG);
+    if(c.k<3){el('path',{d:'M0 -13 L11 0 L0 13 L-11 0 Z',fill:COLORS[a.i],stroke:'#fff','stroke-width':2},g);txt(String(c.k+1),{x:0,y:4.5,'text-anchor':'middle','font-size':11,'font-weight':700,fill:'#fff'},g)}
+    else txt('★',{x:0,y:10,'text-anchor':'middle','font-size':30,fill:'#DE8F05'},g);
+    if(c.k>0&&clues[c.k-1].found){const p=clues[c.k-1];const ln=el('line',{x1:p.x,y1:p.y,x2:c.x,y2:c.y,stroke:COLORS[a.i],'stroke-width':2.5,'stroke-dasharray':'6 5',opacity:0},chainG);fade(ln,.85,500)}
+    const s=slotEls[c.k];s.rc.setAttribute('stroke',COLORS[a.i]);s.rc.setAttribute('stroke-width',2);s.who.textContent='by '+names[a.i];s.who.setAttribute('fill',COLORS[a.i]);
+    if(c.k===3){
+      const secs=((performance.now()-t0)/1000).toFixed(1);
+      if(mode==='shared'){say(a,'📣 all: GOAL found! built on 3 clues',2400,{bold:true});pulse(a.x,a.y,COLORS[a.i]);A.filter(o=>o!==a).forEach(o=>fly(a.x,a.y-12,o.x,o.y-12,COLORS[a.i],900,()=>{o.target=[c.x+rnd(-30,30),c.y+rnd(-25,25)]},fx));finish(true,'✓ goal in '+secs+'s, built together')}
+      else{say(a,'found it alone, on a second, finer sweep',2400,{bold:true});finish('slow','goal in '+secs+'s, the slow way')}
+      return;
     }
-    return cands[0];
-  }
-  function plan(a){const t=nextTarget(a);a.target=t;a.path=t==null?[]:pathTo(a.at,t)}
-  function broadcast(a,leaf){
-    if(mode!=='shared')return;
-    agents.filter(o=>o!==a).forEach(o=>{
-      fly(a.x,a.y-20,o.x,o.y-20,COLORS[a.i],rnd(600,900),()=>{o.known.add(leaf);if(o.target===leaf&&!done)plan(o)},layer);
+    if(mode!=='shared'){say(a,'found a clue… but no way to tell anyone',2200,{color:'#999'});return}
+    const nxt=clues[c.k+1], o=A[nxt.region];
+    // global progress broadcast
+    say(a,'📣 all: clue '+(c.k+1)+' found ✓',1500);pulse(a.x,a.y,COLORS[a.i]);
+    A.filter(x=>x!==a&&x!==o).forEach(x=>fly(a.x,a.y-12,x.x,x.y-12,COLORS[a.i],rnd(700,1000),null,fx));
+    // targeted direct message with the hint
+    later(500,()=>{
+      if(over)return;
+      say(a,'✉ DM → '+names[o.i]+': check your '+corner(nxt)+' corner',2200,{stroke:COLORS[o.i]});
+      const line=el('line',{x1:a.x,y1:a.y,x2:o.x,y2:o.y,stroke:COLORS[o.i],'stroke-width':1.5,'stroke-dasharray':'2 5',opacity:.7},fx);later(1300,()=>line.remove());
+      fly(a.x,a.y-12,o.x,o.y-12,COLORS[o.i],900,()=>{o.knows.add(nxt.k);o.target=[nxt.x,nxt.y];say(o,'on it! building on '+names[a.i]+"'s clue",1800)},fx);
     });
   }
-  if(mode==='shared'){
-    setCap('<b>Messaging on.</b> Agents announce which door they are taking and report dead ends, so the swarm splits the maze instead of retracing each other\'s steps.');
-    agents.forEach((a,k)=>later(200+k*250,()=>{const bb=bubble(layer,500+(k-1.5)*150,112,a.i===3?'I\'ll take door 1 from the far end':'taking door '+(order[a.i][0]+1),{size:11});later(1500,()=>fade(bb,0,300))}));
-  } else {
-    setCap('<b>Messaging off.</b> Every agent sees the doors in the same order, so they all walk down door 1 together. When the exit is behind another door, they waste most of their budget repeating the same search.');
-  }
-  agents.forEach(plan);
-  let last=performance.now();
-  const startDelay=performance.now()+1300;
+  setCap(mode==='shared'
+    ?'<b>Messaging on.</b> Any agent could find the goal alone eventually, but each find is a clue for a teammate. Agents <b>DM</b> that teammate the specific hint and <b>broadcast</b> progress to everyone, so each discovery builds on the last and the team gets there much faster.'
+    :'<b>Messaging off.</b> The goal is still reachable, just slower. Clues point into a teammate\'s region but the hint never reaches them, so the goal\'s owner has to find it alone by combing its region again, more finely.');
+  let last=performance.now(), lastTrail=A.map(a=>[a.x,a.y]);
   function tick(now){
-    const dt=Math.min(50,now-last);last=now;
-    if(now>startDelay&&!done){
-      agents.forEach(a=>{
-        if(!a.path.length){plan(a);if(!a.path.length)return}
-        const nxt=nodes[a.path[0]];
-        const dx=nxt.x-a.x, dy=nxt.y-a.y, d=Math.hypot(dx,dy);
-        const step=0.16*dt*a.speed;
-        if(d<=step){
-          a.x=nxt.x;a.y=nxt.y;a.at=nxt.id;a.path.shift();
-          if(nxt.depth===2){
-            if(nxt.id===exitId){done=true;exitStar.setAttribute('fill','#DE8F05');a.b.mouth.setAttribute('d','M-8 7 Q0 17 8 7');status.textContent='★ '+(mode==='shared'?'exit found! the swarm split the search':'exit found, after lots of repeated work');status.setAttribute('fill',mode==='shared'?'#029E73':'#C44E52');later(2600,start);}
-            else if(!a.known.has(nxt.id)){a.known.add(nxt.id);leafMark[nxt.id].setAttribute('fill','#f1f1f1');leafMark[nxt.id].setAttribute('stroke',COLORS[a.i]);el('path',{d:`M${nxt.x-6} ${nxt.y-6} L${nxt.x+6} ${nxt.y+6} M${nxt.x+6} ${nxt.y-6} L${nxt.x-6} ${nxt.y+6}`,stroke:'#aaa','stroke-width':2.5},layer);broadcast(a,nxt.id);plan(a)}
-            else plan(a);
-          }
-        } else {a.x+=dx/d*step;a.y+=dy/d*step;}
-      });
-    }
-    agents.forEach((a,k)=>{const off=mode==='shared'?0:(k-1.5)*7;a.b.g.setAttribute('transform',`translate(${a.x+off},${a.y-6}) scale(0.42)`)});
+    const dt=Math.min(40,now-last);last=now;
+    if(!over)clock.textContent=((now-t0)/1000).toFixed(1)+'s';
+    A.forEach(a=>{
+      let tx,ty;
+      if(a.target){[tx,ty]=a.target}else{[tx,ty]=a.wps[a.wi]}
+      const dx=tx-a.x,dy=ty-a.y,d=Math.hypot(dx,dy),st=(a.target?0.26:a.speed)*dt;
+      if(d<=st){a.x=tx;a.y=ty;if(a.target){if(!over)a.target=null}else{a.wi=(a.wi+1)%a.wps.length;if(a.wi===0&&!a.swept&&!over){a.swept=true;if(mode==='shared'){say(a,'📣 all: swept my region, nothing usable yet',1700,{color:'#666'});pulse(a.x,a.y,COLORS[a.i])}else say(a,'nothing yet, sweeping again finer…',1600,{color:'#999'})}}}
+      else{a.x+=dx/d*st;a.y+=dy/d*st}
+      if(Math.hypot(a.x-lastTrail[a.i][0],a.y-lastTrail[a.i][1])>20){lastTrail[a.i]=[a.x,a.y];el('circle',{cx:a.x,cy:a.y,r:14,fill:COLORS[a.i],opacity:.07},trail);if(trail.childNodes.length>500)trail.removeChild(trail.firstChild)}
+      if(!over)clues.forEach(c=>{const ok=c.k===0||c.k===3||(clues[c.k-1].found&&a.knows.has(c.k));if(!c.found&&ok&&Math.hypot(c.x-a.x,c.y-a.y)<(c.k===3?14:28))found(a,c)});
+      a.b.g.setAttribute('transform',`translate(${a.x},${a.y}) scale(0.4)`);
+    });
     if(svg.isConnected)raf=requestAnimationFrame(tick);
   }
   raf=requestAnimationFrame(tick);
