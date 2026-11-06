@@ -448,7 +448,8 @@ let scene='agg', mode='shared', raf=null, timers=[], t0=0;
 function later(ms,f){timers.push(setTimeout(f,ms))}
 function clear(){timers.forEach(clearTimeout);timers=[];if(raf)cancelAnimationFrame(raf);raf=null;while(svg.firstChild)svg.removeChild(svg.firstChild);}
 
-// cute agent icon: one original "mochi" critter design shared by every agent
+// cute agent icon
+const CRIT_AR=1.0824;
 function shade(hex,k){const n=parseInt(hex.slice(1),16);let r=n>>16,g=(n>>8)&255,b=n&255;r=Math.round(r*k);g=Math.round(g*k);b=Math.round(b*k);return 'rgb('+Math.min(255,r)+','+Math.min(255,g)+','+Math.min(255,b)+')'}
 function nameTag(parent,name,color,fs){
   fs=fs||11;const g=el('g',{},parent);const w=name.length*fs*0.62+12;
@@ -456,29 +457,26 @@ function nameTag(parent,name,color,fs){
   txt(name,{x:0,y:fs*0.15,'text-anchor':'middle','font-size':fs,'font-weight':700,'font-family':'ui-monospace,Menlo,monospace',fill:'#fff'},g);
   return g;
 }
+const CRIT_BODY="<g id=\"body\">  <path d=\"M10 14 C 26 18, 34 8, 28 0 C 24 -5, 18 -2, 20 3 C 22 8, 16 10, 10 6 Z\" fill=\"#5BA9EC\" stroke=\"#1F3B66\" stroke-width=\"2.2\" stroke-linejoin=\"round\"/>  <path d=\"M-16 -30 L-40 -46 L-32 -34 L-44 -30 L-32 -24 L-40 -14 L-18 -18 Z\" fill=\"#9FD3FA\" stroke=\"#1F3B66\" stroke-width=\"2.2\" stroke-linejoin=\"round\"/>  <path d=\"M16 -30 L40 -46 L32 -34 L44 -30 L32 -24 L40 -14 L18 -18 Z\" fill=\"#9FD3FA\" stroke=\"#1F3B66\" stroke-width=\"2.2\" stroke-linejoin=\"round\"/>  <path d=\"M-32 -34 L-20 -27 M-32 -24 L-20 -22 M32 -34 L20 -27 M32 -24 L20 -22\" stroke=\"#5BA9EC\" stroke-width=\"1.5\"/>  <path d=\"M-6 -38 L0 -50 L6 -38 Z\" fill=\"#5BA9EC\" stroke=\"#1F3B66\" stroke-width=\"2.2\" stroke-linejoin=\"round\"/>  <ellipse cx=\"-8\" cy=\"22\" rx=\"7\" ry=\"4.5\" fill=\"#5BA9EC\" stroke=\"#1F3B66\" stroke-width=\"2\"/>  <ellipse cx=\"8\" cy=\"22\" rx=\"7\" ry=\"4.5\" fill=\"#5BA9EC\" stroke=\"#1F3B66\" stroke-width=\"2\"/>  <path d=\"M-13 -4 C -15 10, -9 20, 0 20 C 9 20, 15 10, 13 -4 Z\" fill=\"#5BA9EC\" stroke=\"#1F3B66\" stroke-width=\"2.2\" stroke-linejoin=\"round\"/>  <path d=\"M-6 -2 C -7 8, -4 16, 0 16 C 4 16, 7 8, 6 -2 Z\" fill=\"#FBE3B4\"/>  <ellipse cx=\"-14\" cy=\"4\" rx=\"4\" ry=\"5.5\" fill=\"#5BA9EC\" stroke=\"#1F3B66\" stroke-width=\"2\"/>  <ellipse cx=\"14\" cy=\"4\" rx=\"4\" ry=\"5.5\" fill=\"#5BA9EC\" stroke=\"#1F3B66\" stroke-width=\"2\"/>  <ellipse cx=\"0\" cy=\"-22\" rx=\"22\" ry=\"19\" fill=\"#5BA9EC\" stroke=\"#1F3B66\" stroke-width=\"2.2\"/>  <ellipse cx=\"0\" cy=\"-12\" rx=\"13\" ry=\"7\" fill=\"#7DBEF2\"/>  <ellipse cx=\"-10\" cy=\"-33\" rx=\"6\" ry=\"3\" fill=\"#fff\" opacity=\".35\" transform=\"rotate(-20 -10 -33)\"/></g>";
 function bot(x,y,color,name,parent,scale){
-  // every agent is the same critter (same policy, no roles); only the name tag differs
-  scale=scale||1; const tagColor=color; color='#2FA98C';
+  // every agent is the same creature (same policy, no roles); only the name tag differs
+  scale=scale||1; const tagColor=color;
   const g=el('g',{transform:`translate(${x},${y}) scale(${scale})`},parent);
-  const dark=shade(color,.72), light='rgba(255,255,255,.55)';
-  // sprout on top
-  el('path',{d:'M0 -30 C 0 -40, 0 -44, 0 -46',stroke:'#3d8b3d','stroke-width':3,fill:'none','stroke-linecap':'round'},g);
-  el('path',{d:'M0 -44 C -14 -52, -20 -40, -2 -40 Z',fill:'#5dbb63'},g);
-  el('path',{d:'M0 -46 C 12 -58, 22 -44, 2 -42 Z',fill:'#7ccf6f'},g);
-  // feet
-  el('ellipse',{cx:-12,cy:20,rx:8,ry:5,fill:dark},g);el('ellipse',{cx:12,cy:20,rx:8,ry:5,fill:dark},g);
-  // body
-  const bulb=el('ellipse',{cx:0,cy:-6,rx:31,ry:28,fill:color},g);
-  el('ellipse',{cx:0,cy:4,rx:18,ry:13,fill:light},g);
-  el('ellipse',{cx:-14,cy:-22,rx:7,ry:4,fill:'#fff',opacity:.35,transform:'rotate(-25 -14 -22)'},g);
-  // face
-  const eyes=el('g',{},g);
-  el('ellipse',{cx:-10,cy:-10,rx:4.2,ry:5.2,fill:'#222'},eyes);el('ellipse',{cx:10,cy:-10,rx:4.2,ry:5.2,fill:'#222'},eyes);
-  el('circle',{cx:-8.6,cy:-12,r:1.6,fill:'#fff'},eyes);el('circle',{cx:11.4,cy:-12,r:1.6,fill:'#fff'},eyes);
-  el('ellipse',{cx:-19,cy:-1,rx:4.5,ry:2.6,fill:'#ff8fa3',opacity:.6},g);el('ellipse',{cx:19,cy:-1,rx:4.5,ry:2.6,fill:'#ff8fa3',opacity:.6},g);
-  const mouth=el('path',{d:'M-5 -2 Q0 3 5 -2',stroke:'#222','stroke-width':2.2,fill:'none','stroke-linecap':'round'},g);
+  const inner=el('g',{},g);
+  inner.insertAdjacentHTML('beforeend',CRIT_BODY);
+  const bulb=inner.firstChild;
+  // face (front-facing, matching eyes)
+  const eyes=el('g',{},inner);
+  [-8,8].forEach(ex=>{el('ellipse',{cx:ex,cy:-25,rx:4.4,ry:5.6,fill:'#1d1d1d'},eyes);el('circle',{cx:ex+1.4,cy:-27.2,r:1.6,fill:'#fff'},eyes);el('ellipse',{cx:ex,cy:-22.8,rx:2.3,ry:1.4,fill:'#c0392b',opacity:.75},eyes)});
+  el('ellipse',{cx:-15,cy:-15,rx:3.4,ry:2,fill:'#ff9fb2',opacity:.7},inner);el('ellipse',{cx:15,cy:-15,rx:3.4,ry:2,fill:'#ff9fb2',opacity:.7},inner);
+  const HAPPY='M-8 -15 Q0 -13 8 -15 Q6 -5 0 -5 Q-6 -5 -8 -15 Z', SAD='M-6 -9 Q0 -14 6 -9';
+  const mp=el('path',{d:HAPPY,fill:'#E8463F',stroke:'#1F3B66','stroke-width':1.8,'stroke-linejoin':'round','stroke-linecap':'round'},inner);
+  const tongue=el('path',{d:'M-4 -8 Q0 -11 4 -8 Q2 -6 0 -6 Q-2 -6 -4 -8 Z',fill:'#ff8a8a'},inner);
+  const mouth={setAttribute:(k,v)=>{const happy=/Q0 (6|9|17)/.test(v);
+    if(happy){mp.setAttribute('d',HAPPY);mp.setAttribute('fill','#E8463F');tongue.setAttribute('opacity',1);inner.setAttribute('transform','translate(0,-5)');}
+    else{mp.setAttribute('d',SAD);mp.setAttribute('fill','none');tongue.setAttribute('opacity',0);inner.setAttribute('transform','translate(0,2)');}}};
   if(name){const t=nameTag(g,name,tagColor,12);t.setAttribute('transform','translate(0,42)')}
-  const blink=()=>{eyes.setAttribute('transform','translate(0,-10) scale(1,0.15) translate(0,10)');setTimeout(()=>eyes.removeAttribute('transform'),140)};
+  const blink=()=>{eyes.setAttribute('transform','translate(0,-25) scale(1,0.15) translate(0,25)');setTimeout(()=>eyes.removeAttribute('transform'),140)};
   const iv=setInterval(()=>{if(!g.isConnected)return clearInterval(iv);if(Math.random()<.35)blink()},1400);
   // gentle bounce
   return {g,bulb,mouth,eyes};
@@ -547,7 +545,7 @@ function runAgg(){
           fly(pos[i][0],pos[i][1]-20,pos[j][0],pos[j][1]-20,COLORS[i],rnd(800,1300),()=>{
             inbox[j].add(i);refresh(j);
             if(inbox.every(s=>s.size===4)&&!verdict.textContent){
-              later(500,()=>{ans.textContent='#### ['+sorted.join(', ')+']';ans.setAttribute('fill','#222');verdict.textContent='✓ team solved it';verdict.setAttribute('fill','#029E73');bots.forEach(b=>b.mouth.setAttribute('d','M-7 -3 Q0 6 7 -3'));later(2600,start)});
+              later(500,()=>{ans.textContent='#### ['+sorted.join(', ')+']';ans.setAttribute('fill','#222');verdict.textContent='✓ team solved it';verdict.setAttribute('fill','#029E73');bots.forEach(b=>b.mouth.setAttribute('d','M-7 0 Q0 9 7 0'));later(2600,start)});
             }
           },layer);
         });
@@ -560,7 +558,7 @@ function runAgg(){
       later(2200+i*250,()=>{const bb=bubble(layer,p[0],p[1]-70,'…waiting for others',{size:12,color:'#777'});later(1600,()=>fade(bb,0,300))});
       later(4200+i*200,()=>{const bb=bubble(layer,p[0],p[1]-70,'read_messages() → (empty)',{size:12,color:'#777'});later(1300,()=>fade(bb,0,300))});
     });
-    later(6000,()=>{ans.textContent='#### [ '+nums.map((n,i)=>'?').join(', ')+' ]';verdict.textContent='✗ no one shared';verdict.setAttribute('fill','#C44E52');bots.forEach(b=>b.mouth.setAttribute('d','M-5 2 Q0 -3 5 2'));later(2600,start)});
+    later(6000,()=>{ans.textContent='#### [ '+nums.map((n,i)=>'?').join(', ')+' ]';verdict.textContent='✗ no one shared';verdict.setAttribute('fill','#C44E52');bots.forEach(b=>b.mouth.setAttribute('d','M-5 5 Q0 0 5 5'));later(2600,start)});
   }
 }
 
