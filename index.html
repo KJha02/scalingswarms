@@ -160,7 +160,8 @@ section.dark code{background:#e8e9e5}
 .eqlegend{color:var(--muted)}
 .steps{grid-template-columns:repeat(3,1fr);gap:22px;margin-top:34px}
 .cards{grid-template-columns:1fr 1fr}
-.tasks{grid-template-columns:1fr;gap:44px}
+.tasks{grid-template-columns:1fr 1fr;gap:40px;width:min(1040px,94vw);margin-left:50%;transform:translateX(-50%)}
+@media(max-width:820px){.tasks{grid-template-columns:1fr}}
 .lead{font-size:20px}
 p.small,.small{font-size:15px}
 .note{font-size:13px;color:#888;text-align:center;margin-top:10px}
@@ -182,7 +183,7 @@ figure.chart{margin:30px 0}
 .ctick{font-size:11.5px;fill:#777}.clabel{font-size:11.5px;fill:#555;font-weight:700}
 .chalo{paint-order:stroke;stroke:#fff;stroke-width:4px;stroke-linejoin:round}
 .cdl{font-size:12px;fill:#333;font-weight:700}.cval{font-size:13px;fill:#222;font-weight:700}
-.clegend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:#444;margin:0 0 8px 4px}
+.clegend{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 18px;font-size:13px;color:#444;margin:4px 0 6px}
 .clegend i,.ctip i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
 .ctip{position:absolute;display:none;pointer-events:none;background:#fff;border:1px solid #ddd;border-radius:8px;padding:8px 10px;font-size:12.5px;color:#333;box-shadow:0 4px 14px rgba(0,0,0,.08);min-width:170px;z-index:5}
 .ctip b{display:block;margin-bottom:4px}.ctip div{display:flex;align-items:center;gap:4px;white-space:nowrap}.ctip span{margin-left:auto;padding-left:10px;font-variant-numeric:tabular-nums}
@@ -859,19 +860,19 @@ const C={s3:'#029E73',ind:'#DE8F05',sft:'#0173B2',nocomm:'#D65F5F',solo:'#555555
 const N=[1,2,4,6,8,12,16];
 const D={
  aggScale:[
-  {name:'s³ (ours)',color:C.s3,pts:[[84.9,1.7],[92.19,1.76],[93.23,2.04],[85.42,1.55],[54.69,3.59],[17.71,2.23],[1.04,0.66]]},
-  {name:'online SFT',color:C.sft,pts:[[44.79,3.58],[61.98,2.48],[34.9,3.17],[5.73,1.88],[2.08,1.04],[0,0],[0,0]]},
-  {name:'individual reward',color:C.ind,pts:[[63.02,4.07],[70.83,4.32],[12.5,1.8],[0.52,0.52],[0,0],[0,0],[0,0]]}],
+  {name:'s³ (Ours)',color:C.s3,pts:[[84.9,1.7],[92.19,1.76],[93.23,2.04],[85.42,1.55],[54.69,3.59],[17.71,2.23],[1.04,0.66]]},
+  {name:'Online SFT',color:C.sft,pts:[[44.79,3.58],[61.98,2.48],[34.9,3.17],[5.73,1.88],[2.08,1.04],[0,0],[0,0]]},
+  {name:'Individual Reward',color:C.ind,pts:[[63.02,4.07],[70.83,4.32],[12.5,1.8],[0.52,0.52],[0,0],[0,0],[0,0]]}],
  expScale:[
-  {name:'s³ (ours)',color:C.s3,pts:[[31.25,2.68],[62.5,2.42],[89.58,1.55],[97.4,0.96],[97.92,0.66],[97.92,1.04],[100,0]]},
-  {name:'solo best-of-N',color:C.solo,dash:'5 4',pts:[[39.58,2.08],[57.81,1.76],[80.21,2.08],[90.1,1.49],[97.4,1.25],[99.48,0.52],[100,0]]},
-  {name:'no messaging',color:C.nocomm,pts:[[38.02,5.32],[53.12,3.02],[70.31,2.39],[75.52,2.6],[81.77,1.88],[89.06,0.7],[95.31,1.34]]}],
- aggBars:[{name:'s³ (ours)',color:C.s3,v:93.23,se:2.04},{name:'online SFT',color:C.sft,v:34.9,se:3.17},{name:'individual reward',color:C.ind,v:12.5,se:1.8}],
- expBars:[{name:'s³ (ours)',color:C.s3,v:89.58,se:1.55},{name:'individual reward',color:C.ind,v:90.62,se:1.4},{name:'solo best-of-4',color:C.solo,v:80.21,se:2.08},{name:'no messaging',color:C.nocomm,v:70.31,se:2.39}],
+  {name:'s³ (Ours)',color:C.s3,pts:[[31.25,2.68],[62.5,2.42],[89.58,1.55],[97.4,0.96],[97.92,0.66],[97.92,1.04],[100,0]]},
+  {name:'Solo Best-of-N',color:C.solo,dash:'5 4',pts:[[39.58,2.08],[57.81,1.76],[80.21,2.08],[90.1,1.49],[97.4,1.25],[99.48,0.52],[100,0]]},
+  {name:'No Messaging',color:C.nocomm,pts:[[38.02,5.32],[53.12,3.02],[70.31,2.39],[75.52,2.6],[81.77,1.88],[89.06,0.7],[95.31,1.34]]}],
+ aggBars:[{name:'s³ (Ours)',color:C.s3,v:93.23,se:2.04},{name:'Online SFT',color:C.sft,v:34.9,se:3.17},{name:'Individual Reward',color:C.ind,v:12.5,se:1.8}],
+ expBars:[{name:'s³ (Ours)',color:C.s3,v:89.58,se:1.55},{name:'Individual Reward',color:C.ind,v:90.62,se:1.4},{name:'Solo Best-of-4',color:C.solo,v:80.21,se:2.08},{name:'No Messaging',color:C.nocomm,v:70.31,se:2.39}],
  train:[
-  {name:'s³ (ours)',color:C.s3,pts:[[1, 2.0], [5, 2.1], [9, 2.9], [13, 3.3], [17, 3.9], [21, 4.6], [25, 5.0], [29, 5.6], [33, 6.2], [37, 7.3], [41, 8.2], [45, 9.2], [49, 11.2], [53, 13.7], [57, 15.2], [61, 18.8], [65, 21.3], [69, 23.6], [73, 27.6], [77, 32.5], [81, 39.8], [85, 43.7], [89, 48.1], [93, 51.6], [97, 53.0], [101, 57.0], [105, 64.3], [109, 69.7], [113, 73.4], [117, 75.6], [121, 78.4], [125, 82.8], [129, 85.0], [133, 87.3], [137, 89.2], [141, 91.0], [145, 92.8], [149, 93.9], [153, 95.3], [157, 95.1], [161, 95.6], [165, 95.7], [169, 95.0], [173, 94.8], [177, 94.4], [181, 93.8], [185, 93.5], [189, 93.3], [193, 93.2], [197, 93.2], [200, 92.6]]},
-  {name:'online SFT',color:C.sft,pts:[[1, 2.3], [5, 2.2], [9, 2.4], [13, 3.1], [17, 3.0], [21, 3.4], [25, 3.9], [29, 4.3], [33, 4.4], [37, 4.7], [41, 5.4], [45, 6.2], [49, 7.1], [53, 6.8], [57, 7.6], [61, 7.1], [65, 7.3], [69, 8.8], [73, 9.7], [77, 10.2], [81, 11.6], [85, 12.6], [89, 12.5], [93, 11.9], [97, 13.7], [101, 13.5], [105, 13.8], [109, 14.4], [113, 16.4], [117, 16.9], [121, 17.2], [125, 17.0], [129, 16.8], [133, 16.3], [137, 17.2], [141, 19.2], [145, 19.1], [149, 19.7], [153, 21.1], [157, 22.4], [161, 21.9], [165, 22.5], [169, 21.9], [173, 22.8], [177, 25.4], [181, 26.6], [185, 27.0], [189, 27.7], [193, 29.8], [197, 30.2], [200, 32.3]]},
-  {name:'individual reward',color:C.ind,pts:[[1, 3.4], [5, 3.0], [9, 2.8], [13, 3.0], [17, 3.4], [21, 4.1], [25, 4.6], [29, 5.0], [33, 6.1], [37, 7.2], [41, 7.8], [45, 9.1], [49, 10.1], [53, 11.5], [57, 12.7], [61, 13.5], [65, 13.8], [69, 14.0], [73, 15.2], [77, 14.8], [81, 15.6], [85, 16.4], [89, 17.3], [93, 17.3], [97, 16.8], [101, 14.9], [105, 15.1], [109, 15.1], [113, 14.5], [117, 13.8], [121, 12.7], [125, 12.0], [129, 11.4], [133, 11.2], [137, 10.2], [141, 9.8], [145, 11.1], [149, 11.8], [153, 11.2], [157, 12.4], [161, 11.9], [165, 11.2], [169, 12.2], [173, 11.1], [177, 8.8], [181, 9.2], [185, 8.9], [189, 8.7], [193, 8.5], [197, 7.3], [200, 7.2]]}]
+  {name:'s³ (Ours)',color:C.s3,pts:[[1, 2.0], [5, 2.1], [9, 2.9], [13, 3.3], [17, 3.9], [21, 4.6], [25, 5.0], [29, 5.6], [33, 6.2], [37, 7.3], [41, 8.2], [45, 9.2], [49, 11.2], [53, 13.7], [57, 15.2], [61, 18.8], [65, 21.3], [69, 23.6], [73, 27.6], [77, 32.5], [81, 39.8], [85, 43.7], [89, 48.1], [93, 51.6], [97, 53.0], [101, 57.0], [105, 64.3], [109, 69.7], [113, 73.4], [117, 75.6], [121, 78.4], [125, 82.8], [129, 85.0], [133, 87.3], [137, 89.2], [141, 91.0], [145, 92.8], [149, 93.9], [153, 95.3], [157, 95.1], [161, 95.6], [165, 95.7], [169, 95.0], [173, 94.8], [177, 94.4], [181, 93.8], [185, 93.5], [189, 93.3], [193, 93.2], [197, 93.2], [200, 92.6]]},
+  {name:'Online SFT',color:C.sft,pts:[[1, 2.3], [5, 2.2], [9, 2.4], [13, 3.1], [17, 3.0], [21, 3.4], [25, 3.9], [29, 4.3], [33, 4.4], [37, 4.7], [41, 5.4], [45, 6.2], [49, 7.1], [53, 6.8], [57, 7.6], [61, 7.1], [65, 7.3], [69, 8.8], [73, 9.7], [77, 10.2], [81, 11.6], [85, 12.6], [89, 12.5], [93, 11.9], [97, 13.7], [101, 13.5], [105, 13.8], [109, 14.4], [113, 16.4], [117, 16.9], [121, 17.2], [125, 17.0], [129, 16.8], [133, 16.3], [137, 17.2], [141, 19.2], [145, 19.1], [149, 19.7], [153, 21.1], [157, 22.4], [161, 21.9], [165, 22.5], [169, 21.9], [173, 22.8], [177, 25.4], [181, 26.6], [185, 27.0], [189, 27.7], [193, 29.8], [197, 30.2], [200, 32.3]]},
+  {name:'Individual Reward',color:C.ind,pts:[[1, 3.4], [5, 3.0], [9, 2.8], [13, 3.0], [17, 3.4], [21, 4.1], [25, 4.6], [29, 5.0], [33, 6.1], [37, 7.2], [41, 7.8], [45, 9.1], [49, 10.1], [53, 11.5], [57, 12.7], [61, 13.5], [65, 13.8], [69, 14.0], [73, 15.2], [77, 14.8], [81, 15.6], [85, 16.4], [89, 17.3], [93, 17.3], [97, 16.8], [101, 14.9], [105, 15.1], [109, 15.1], [113, 14.5], [117, 13.8], [121, 12.7], [125, 12.0], [129, 11.4], [133, 11.2], [137, 10.2], [141, 9.8], [145, 11.1], [149, 11.8], [153, 11.2], [157, 12.4], [161, 11.9], [165, 11.2], [169, 12.2], [173, 11.1], [177, 8.8], [181, 9.2], [185, 8.9], [189, 8.7], [193, 8.5], [197, 7.3], [200, 7.2]]}]
 };
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 function el(t,a,p){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e}
@@ -882,8 +883,7 @@ function onVisible(node,fn){if(reduce||!('IntersectionObserver' in window)){fn(t
 
 function lineChart(id,series,o){
   const host=document.getElementById(id);if(!host)return;
-  if(series.length>1)legend(host,series);
-  const W=o.w||640,H=o.h||340,m={l:46,r:o.rpad||124,t:28,b:44};
+  const W=o.w||640,H=o.h||340,m={l:46,r:o.direct===false?18:(o.rpad||136),t:28,b:44};
   const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,class:'csvg',role:'img','aria-label':o.aria},host);
   const xs=v=>m.l+(v-o.x0)/(o.x1-o.x0)*(W-m.l-m.r), ys=v=>H-m.b-v/o.y1*(H-m.t-m.b);
   const grid=el('g',{},svg);
@@ -904,8 +904,9 @@ function lineChart(id,series,o){
   });
   // direct labels at line ends, nudged apart
   labels.sort((a,b)=>a.y-b.y);for(let i=1;i<labels.length;i++)if(labels[i].y-labels[i-1].y<15)labels[i].y=labels[i-1].y+15;{const over=labels.length?labels[labels.length-1].y-(H-m.b-4):0;if(over>0)labels.forEach(L=>L.y-=over)}
-  labels.forEach(L=>tx(L.s.name,{x:L.x+10,y:L.y+4,class:'cdl'},data));
+  if(o.direct!==false)labels.forEach(L=>tx(L.s.name,{x:L.x+10,y:L.y+4,class:'cdl'},data));
   if(mkl)svg.appendChild(mkl);
+  if(series.length>1)legend(host,series);
   // hover layer: crosshair + tooltip at nearest x
   const hv=el('g',{opacity:0},svg);const vl=el('line',{y1:m.t,y2:H-m.b,class:'ccross'},hv);
   const hit=el('rect',{x:m.l,y:m.t,width:W-m.l-m.r,height:H-m.t-m.b,fill:'transparent'},svg);
@@ -926,29 +927,29 @@ function barChart(id,bars,o){
   const ys=v=>H-m.b-v/100*(H-m.t-m.b);
   [0,25,50,75,100].forEach(v=>{el('line',{x1:m.l,x2:W-m.r,y1:ys(v),y2:ys(v),class:'cgrid'},svg);tx(v,{x:m.l-8,y:ys(v)+4,'text-anchor':'end',class:'ctick'},svg)});
   el('line',{x1:m.l,x2:W-m.r,y1:ys(0),y2:ys(0),class:'caxis'},svg);
-  tx('success (%)',{x:4,y:12,class:'clabel'},svg);
+  tx('Success (%)',{x:4,y:12,class:'clabel'},svg);
   const slot=(W-m.l-m.r)/bars.length, bw=Math.min(78,slot*0.56);
   const T=tip(host);const items=[];
   bars.forEach((b,i)=>{
     const cx=m.l+slot*(i+.5);
     const r=el('rect',{x:cx-bw/2,y:ys(0),width:bw,height:0,rx:4,fill:b.color},svg);
-    const eb=el('line',{x1:cx,x2:cx,y1:ys(b.v+b.se),y2:ys(Math.max(0,b.v-b.se)),stroke:'#333','stroke-width':1.4,opacity:0},svg);
-    const val=tx(b.v.toFixed(0)+'%',{x:cx,y:ys(b.v)-10,'text-anchor':'middle',class:'cval',opacity:0},svg);
+    const eb=el('path',{d:`M${cx} ${ys(b.v+b.se)}V${ys(Math.max(0,b.v-b.se))}M${cx-6} ${ys(b.v+b.se)}H${cx+6}M${cx-6} ${ys(Math.max(0,b.v-b.se))}H${cx+6}`,stroke:'#222','stroke-width':1.6,fill:'none',opacity:0},svg);
+    const val=tx(b.v.toFixed(0)+'%',{x:cx,y:ys(b.v+b.se)-8,'text-anchor':'middle',class:'cval',opacity:0},svg);
     tx(b.name,{x:cx,y:H-m.b+19,'text-anchor':'middle',class:'ctick'},svg);
     const hit=el('rect',{x:cx-slot/2,y:m.t,width:slot,height:H-m.t-m.b,fill:'transparent'},svg);
     hit.addEventListener('pointermove',e=>{T.innerHTML=`<b>${b.name}</b><div>${b.v.toFixed(1)}% ± ${b.se.toFixed(1)} SE</div>`;T.style.display='block';const hr=host.getBoundingClientRect();T.style.left=(e.clientX-hr.left+14)+'px';T.style.top=(e.clientY-hr.top-10)+'px'});
     hit.addEventListener('pointerleave',()=>T.style.display='none');
     items.push({r,eb,val,b});
   });
-  function draw(k){items.forEach((it,i)=>{const kk=Math.max(0,Math.min(1,k*(1+0.18*(items.length-1))-i*0.18));const e=1-Math.pow(1-kk,3);const v=it.b.v*e;it.r.setAttribute('y',ys(v));it.r.setAttribute('height',ys(0)-ys(v));const show=kk>=1?1:0;it.eb.setAttribute('opacity',show*.8);it.val.setAttribute('opacity',show)})}
+  function draw(k){items.forEach((it,i)=>{const kk=Math.max(0,Math.min(1,k*(1+0.18*(items.length-1))-i*0.18));const e=1-Math.pow(1-kk,3);const v=it.b.v*e;it.r.setAttribute('y',ys(v));it.r.setAttribute('height',ys(0)-ys(v));const show=(kk>=0.999||k>=1)?1:0;it.eb.setAttribute('opacity',show*.8);it.val.setAttribute('opacity',show)})}
   onVisible(host,instant=>{if(instant){draw(1);items.forEach(it=>{it.eb.setAttribute('opacity',.8);it.val.setAttribute('opacity',1)});return}const s=performance.now();(function f(n){const k=Math.min(1,(n-s)/1300);draw(k);if(k<1)requestAnimationFrame(f);else draw(1)})(s)});
 }
 
 barChart('chart-agg-bars',D.aggBars,{aria:'Information aggregation success with four agents: s3 93%, online SFT 35%, individual reward 13%'});
-lineChart('chart-agg-scale',D.aggScale,{x0:1,x1:16,xt:N,y1:100,yt:[0,25,50,75,100],xl:'swarm size',yl:'success (%)',mark:4,markLabel:'trained with 4',aria:'Information aggregation success versus swarm size'});
-lineChart('chart-exp-scale',D.expScale,{x0:1,x1:16,xt:N,y1:100,yt:[0,25,50,75,100],xl:'swarm size',yl:'success (%)',mark:4,markLabel:'trained with 4',aria:'Decentralized exploration success versus swarm size'});
+lineChart('chart-agg-scale',D.aggScale,{x0:1,x1:16,xt:N,y1:100,yt:[0,25,50,75,100],xl:'Swarm Size',yl:'Success (%)',mark:4,markLabel:'Trained With 4',direct:false,aria:'Information aggregation success versus swarm size'});
+lineChart('chart-exp-scale',D.expScale,{x0:1,x1:16,xt:N,y1:100,yt:[0,25,50,75,100],xl:'Swarm Size',yl:'Success (%)',mark:4,markLabel:'Trained With 4',direct:false,aria:'Decentralized exploration success versus swarm size'});
 barChart('chart-exp-bars',D.expBars,{aria:'Decentralized exploration success with four agents'});
-lineChart('chart-train',D.train,{xy:true,x0:0,x1:200,xt:[0,50,100,150,200],y1:100,yt:[0,25,50,75,100],xl:'training step',yl:'solve rate (%)',dur:2600,aria:'Information aggregation solve rate during training'});
+lineChart('chart-train',D.train,{xy:true,x0:0,x1:200,xt:[0,50,100,150,200],y1:100,yt:[0,25,50,75,100],xl:'Training Step',yl:'Solve Rate (%)',dur:2600,direct:false,aria:'Information aggregation solve rate during training'});
 })();
 </script>
 </body>
