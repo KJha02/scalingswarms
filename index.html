@@ -413,7 +413,7 @@ figcaption{font-family:var(--sans);font-style:normal;font-size:14.5px}
   <div class="steps">
    <div class="step"><div class="n">shared reward</div><h4>Works for both tasks</h4><p>Individual rewards are fine for exploration but collapse in aggregation, where sharing only helps others.</p></div>
    <div class="step"><div class="n">communication</div><h4>Messages do real work</h4><p>Turning messaging off costs 19 points and roughly doubles repeated search.</p></div>
-   <div class="step"><div class="n">demonstrations</div><h4>A starting point</h4><p>Starting from the base model, RL still improves both swarm and solo learners, but after 200 steps they remain far less successful than learners trained with SFT and then RL, and the swarm has no significant edge over best-of-4.</p></div>
+   <div class="step"><div class="n">demonstrations</div><h4>A starting point</h4><p>Without SFT, RL still helps, but after 200 steps both learners trail their SFT+RL versions and the swarm loses its edge over best-of-4.</p></div>
   </div>
  </div>
 </section>
