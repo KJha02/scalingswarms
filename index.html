@@ -168,7 +168,7 @@ p.small,.small{font-size:15px}
 figure.wide{width:min(1000px,94vw);margin-left:50%;transform:translateX(-50%)}
 figure.wide figcaption{max-width:700px;margin-left:auto;margin-right:auto}
 #tasks .demo-wrap{width:min(1040px,94vw);margin-left:50%;transform:translateX(-50%);padding:0}
-#tasks .demo-wrap .label,#tasks .demo-wrap>p{max-width:700px;margin-left:auto;margin-right:auto}
+#tasks .demo-wrap .label,#tasks .demo-wrap>p{max-width:700px;margin-left:auto;margin-right:auto;text-align:center}
 .callout{max-width:none}
 .prose{max-width:none}
 .stats{margin:26px 0 8px}
@@ -315,21 +315,23 @@ figcaption{font-family:var(--sans);font-style:normal;font-size:14.5px}
    <div class="task">
     <div class="trend down">▼ harder as N grows</div>
     <h3>Information aggregation</h3>
-    <p>Each agent holds one private number. The team must return all N, sorted. Agents have to share, read, avoid duplicates, and wait until they've heard from everyone. Think agents reading different files of a codebase, or sensors each seeing part of a scene.</p>
+    <p><b>The general problem:</b> each agent holds private information the others need, and the answer only exists once it's pooled. Think agents reading different files of a codebase, or sensors each seeing part of a scene.</p>
+    <p><b>Our task:</b> each agent holds one private number, and the team must return all N, sorted. Agents have to share, read, avoid duplicates, and wait until they've heard from everyone.</p>
     <div class="eqbox">\[ P_{\mathrm{coord}}(N) \le \min\!\left(1,\, N q^{N-1}\right) \]</div>
     <p class="muted small">If each needed message gets through with probability \(q&lt;1\), success falls off exponentially with N.</p>
    </div>
    <div class="task">
     <div class="trend up">▲ baseline improves as N grows</div>
     <h3>Decentralized exploration</h3>
-    <p>Each agent searches its own copy of a tree of 391 rooms for one exit, usually without the budget to search it all. Anyone can get there alone, but sharing dead ends lets a team split the search, like parallel research agents or a distributed bug hunt.</p>
+    <p><b>The general problem:</b> agents search for a solution as fast as possible. Any one of them could find it alone, but sharing what they've ruled out lets a team split the search, like parallel research agents or a distributed bug hunt.</p>
+    <p><b>Our task:</b> each agent searches its own copy of a tree of 391 rooms for one exit, usually without the budget to search it all.</p>
     <div class="eqbox">\[ P_{\mathrm{search}}(N) = 1-(1-p)^N \]</div>
     <p class="muted small">Independent best-of-N keeps improving with N, so communication has to beat a rising baseline.</p>
    </div>
   </div>
   <div class="demo-wrap" style="margin-top:48px">
    <div class="label">Illustrations</div>
-   <p class="muted small" style="margin:-4px 0 14px">The first follows our aggregation task. The second is a stylized search problem, not our maze.</p>
+   <p class="muted small" style="margin:-4px auto 14px">The first follows our aggregation task. The second is a stylized search problem, not our maze.</p>
    <div class="demo" id="demo">
     <div class="bar">
       <div class="tabs" role="tablist">
