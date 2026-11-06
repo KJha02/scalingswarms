@@ -792,12 +792,12 @@ start();
   function assign(a,s){a.slot=s;s.agent=a;s.pending=false;a.settled=false}
   function release(a){if(a.slot){a.slot.agent=null;a.slot=null}}
   // seed: one slot in each glyph
-  [slots[Math.floor(slots.length*0.3)], slots[slots.length-5]].forEach((s,k)=>{const a=agents[k];a.x=s.x;a.y=s.y;assign(a,s)});
+  [0.08,0.3,0.52,0.74].map(f=>slots[Math.floor(slots.length*0.82*f)]).concat([slots[slots.length-5],slots[slots.length-40]]).forEach((s,k)=>{const a=agents[k];a.x=s.x;a.y=s.y;assign(a,s)});
   if(reduce)slots.forEach((s,i)=>{if(!s.agent){const a=agents.find(a=>!a.slot);a.x=s.x;a.y=s.y;assign(a,s)}});
   function recruit(now){
     // vacant slots that border an occupied one ask a neighbor to call in a free agent
-    let budget=mouseOn?8:22;
-    const vac=slots.filter(s=>!s.agent&&!s.pending&&s.nb.some(t=>t.agent&&Math.hypot(t.agent.x-t.x,t.agent.y-t.y)<6));
+    let budget=mouseOn?10:60;
+    const vac=slots.filter(s=>!s.agent&&!s.pending&&s.nb.some(t=>t.agent&&Math.hypot(t.agent.x-t.x,t.agent.y-t.y)<14));
     for(let k=0;k<vac.length&&budget>0;k++){
       const s=vac[Math.floor(Math.random()*vac.length)];
       if(s.pending||s.agent)continue;
@@ -806,7 +806,7 @@ start();
       if(!best)break;
       const sender=s.nb.find(t=>t.agent)?.agent;
       s.pending=true;best.busy=now+1e9;budget--;
-      msgs.push({from:sender,to:best,slot:s,t0:now,dur:Math.min(240,70+bd*0.6),col:s.color});
+      msgs.push({from:sender,to:best,slot:s,t0:now,dur:Math.min(160,50+bd*0.4),col:s.color});
     }
   }
   let last=performance.now();
@@ -817,7 +817,7 @@ start();
       if(m.done&&now-m.done>300)msgs.splice(i,1)}
     for(const a of agents){
       const s=a.slot;
-      if(s){a.vx+=(s.x-a.x)*0.14*dt;a.vy+=(s.y-a.y)*0.14*dt;}
+      if(s){a.vx+=(s.x-a.x)*0.2*dt;a.vy+=(s.y-a.y)*0.2*dt;}
       else{ // free agents mill around, drifting toward the logo
         a.ph+=0.03*dt;a.vx+=(Math.cos(a.ph)*0.06+(W/2-a.x)*0.0004)*dt;a.vy+=(Math.sin(a.ph*1.3)*0.06+(H/2-a.y)*0.0005)*dt;}
       const dx=a.x-mx,dy=a.y-my,d=Math.hypot(dx,dy);
