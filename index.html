@@ -163,33 +163,33 @@ footer a{color:var(--accent)}
     <a class="btn" href="paper.pdf">Read the paper</a>
     <a class="btn ghost" href="#citation">Cite</a>
   </div>
-  <p class="tagline">What if a swarm of AI agents could figure out how to work together on its own? s³ trains LLM swarms with <b>no leader, no roles, and no turn order</b>, just one shared reward, and lets their organization emerge.</p>
+  <p class="tagline">Can a group of AI agents learn to work together without anyone telling them how? We train swarms of language models with <b>no leader, no assigned roles, and no turn order</b>. They share one reward and can message each other whenever they want, and over the course of training they figure out how to organize.</p>
 </header>
 
 <div class="demo-wrap">
   <div class="demo">
-    <svg id="hero" viewBox="0 0 1000 430" role="img" aria-label="Animated swarm of agents exploring a field and messaging each other about discoveries"></svg>
-    <div class="cap" id="herocap"><b>A swarm at work.</b> Agents explore on their own, broadcast what they find, and teammates build follow-up discoveries on top of each other's finds. <span id="herocount" class="mono"></span></div>
+    <svg id="hero" viewBox="0 0 1000 430" role="img" aria-label="Cartoon of a swarm of agents exploring a field and messaging each other about what they find"></svg>
+    <div class="cap" id="herocap">Agents explore on their own, tell each other what they find, and pick up where a teammate left off. <span id="herocount" class="mono"></span></div>
   </div>
-  <p style="font-size:13px;color:#888;text-align:center;margin-top:10px">Illustrative simulation of swarm behavior, not a recording of model outputs.</p>
+  <p style="font-size:13px;color:#888;text-align:center;margin-top:10px">A cartoon of the idea, not one of our experiments.</p>
 </div>
 
 <!-- 01 -->
 <section id="problem">
  <div class="in">
-  <div class="label">01 / The problem</div>
-  <h2>Multi-agent systems are organized by hand</h2>
+  <div class="label">01 / Motivation</div>
+  <h2>Most multi-agent systems are organized by hand</h2>
   <div class="prose">
-   <p class="lead">Today, when we run many language models at once, a person decides how they should be organized. One agent becomes the orchestrator and hands out subtasks. Others debate in rounds, or play assigned roles like "planner" and "critic."</p>
-   <p>These designs are reasonable guesses, but they are guesses, and they are fixed before the agents ever see the task. They also break in familiar ways: orchestrated systems duplicate work, flood each other with updates, and fail to reconcile subagents that disagree.</p>
-   <p>Human organizations adapt instead. How people divide labor and share information depends on the task, and much of that structure emerged through cultural evolution rather than anyone's design. Centrally planned economies struggled in part because no planner could gather everything the people doing the work knew. A fixed harness has the same problem.</p>
-   <p>The bitter lesson of AI is that learned behavior keeps overtaking behavior designed by hand. Reasoning models improved most by learning to reason through RL, not by following strategies written by people. <b>We think multi-agent organization works the same way.</b> If a central coordinator is the best way to solve a task, the swarm should learn to create one. If the task rewards specialization, agents should learn to divide the work.</p>
+   <p class="lead">When people run many language models together, they usually decide ahead of time how the models should work together. One model plays the orchestrator and hands out subtasks, others debate in rounds, or each gets a role like planner or critic.</p>
+   <p>These structures are written before the agents ever see a task, and they don't adapt to it. They also fail in familiar ways. Orchestrated systems duplicate work, send each other too many updates, and have trouble reconciling subagents that disagree.</p>
+   <p>Human groups are different. How people split up work and share information depends on the problem in front of them, and a lot of that structure came from cultural evolution rather than anyone's plan. Part of why centrally planned economies struggled is that no planner could know everything the people doing the work knew.</p>
+   <p>In AI, learned behavior has repeatedly beaten hand-designed behavior. Reasoning models got much better by learning to reason through reinforcement learning, not by following strategies people wrote down for them. We think the same should be true for how groups of agents organize. If a task is best solved with a coordinator, the agents should learn to pick one. If it's best solved by splitting up the work, they should learn to split it.</p>
   </div>
   <figure>
    <img src="assets/overview.png" alt="Left: multi-agent systems organized by static harnesses. Right: s3 agents decide for themselves when to work alone, share findings, or read messages.">
-   <figcaption><b>Figure 1 · Designed vs. learned organization.</b> Most systems use a harness designed in advance, such as a controller that assigns tasks or a leader that directs a forum. In s³, agents decide for themselves how long to work alone and when to share findings or read teammates' messages.</figcaption>
+   <figcaption><b>Figure 1.</b> Left: prior systems use a structure designed in advance, like a controller that assigns tasks or a leader that runs a shared forum. Right: in s³, each agent decides for itself how long to work alone and when to share findings or read teammates' messages. The organization comes out of training.</figcaption>
   </figure>
-  <div class="callout"><b>Our claim.</b> To our knowledge, s³ is the first demonstration that cooperative multi-agent RL can train <b>asynchronous, role-free LLM swarms</b> whose learned coordination beats best-of-N sampling from solo agents trained with a matched budget, and keeps working with more agents than it was trained with.</div>
+  <div class="callout">To our knowledge, s³ is the first method where reinforcement learning trains <b>asynchronous language model swarms with no prescribed roles or communication structure</b> to coordinate well enough to beat best-of-N sampling from solo agents trained with the same budget. The swarms also keep their advantage when we run them with more agents than they were trained with.</div>
  </div>
 </section>
 
@@ -198,30 +198,30 @@ footer a{color:var(--accent)}
  <div class="in">
   <div class="split">
    <div>
-    <div class="label">02 / The method</div>
-    <h2>One model. One reward. No org chart.</h2>
-    <p class="lead">A swarm is N copies of one model. Each agent works on its own private copy of the task and never sees its teammates' reasoning or tool results.</p>
-    <p class="muted">The only way to coordinate is through what agents choose to tell each other. So learning to organize means learning to communicate: what to share, with whom, when, and when sharing is not worth its cost.</p>
+    <div class="label">02 / Method</div>
+    <h2>Copies of one model, one shared reward</h2>
+    <p class="lead">A swarm is N copies of the same model. Each agent works on its own copy of the task and can't see what its teammates are thinking or what their tools return.</p>
+    <p class="muted">The only way agents can coordinate is by what they choose to tell each other. So learning to organize really means learning to communicate: what to share, who to share it with, when, and when it isn't worth saying anything.</p>
    </div>
    <div>
-    <p>The whole team receives a single reward: success if <i>any</i> agent solves the task, minus a small cost for the share of the team's token allowance it used.</p>
+    <p>Everyone on the team gets the same reward. The team succeeds if <i>any</i> agent solves the task, and successful teams pay a small cost for the fraction of their token budget they used:</p>
     <div class="eqbox">\[
       R \;=\; {\color{#5fd3ab}S}\left(1 - {\color{#f5b04a}\lambda} \min\!\left(1, \frac{{\color{#9fc5ff}\sum_{i=1}^{N} \lvert\tau_i\rvert}}{N L}\right)\right)
     \]</div>
     <div class="eqlegend"><span style="color:#5fd3ab">team success (any agent)</span><span style="color:#f5b04a">token cost, λ = 0.25</span><span style="color:#9fc5ff">tokens used by the whole team</span></div>
-    <p style="margin-top:18px">For each problem we sample 8 independent team attempts. Every token from every member of team \(g\) receives the same advantage:</p>
+    <p style="margin-top:18px">For each problem we run 8 independent teams and compare them, the way GRPO compares responses. Every token from every member of team \(g\) gets that team's advantage:</p>
     <div class="eqbox">\[
       A_g = \frac{{\color{#5fd3ab}R_g} - {\color{#f5b04a}\bar R}}{\sigma_R + \epsilon}
     \]</div>
-    <div class="eqlegend"><span style="color:#5fd3ab">this team's reward</span><span style="color:#f5b04a">mean over the 8 teams on the same problem</span></div>
+    <div class="eqlegend"><span style="color:#5fd3ab">this team's reward</span><span style="color:#f5b04a">average over the 8 teams on the same problem</span></div>
    </div>
   </div>
 
-  <div class="label" style="margin-top:56px">How it works</div>
+  <div class="label" style="margin-top:56px">A few design choices</div>
   <div class="steps">
-   <div class="step"><div class="n">01</div><h4>Give every agent a phone.</h4><p>Two tools: <code>message(to, text)</code> to one teammate or everyone, and <code>read_messages()</code>. No limit on messages, no reward for talking. Teammates get random, shuffled names so no conventions can be memorized.</p></div>
-   <div class="step"><div class="n">02</div><h4>Reward the team's best outcome.</h4><p>A sum would make bigger teams worth more just for being bigger. An average would reward each agent for being right alone, pushing agents to solve separately and then argue. The max rewards only what the team achieves.</p></div>
-   <div class="step"><div class="n">03</div><h4>Let teams compete, not teammates.</h4><p>GRPO with the team as the unit. We never estimate an agent's individual credit: comparing independent teams on the same problem does that. Helping a teammate win is reinforced.</p></div>
+   <div class="step"><div class="n">01</div><h4>Two messaging tools</h4><p>Agents can call <code>message(to, text)</code> to write to one teammate or everyone, and <code>read_messages()</code> to check their inbox. There's no limit on messages and no reward for sending them. Teammates get random names in a shuffled order each episode, so the policy can't learn conventions tied to a specific name.</p></div>
+   <div class="step"><div class="n">02</div><h4>Reward the team's best outcome</h4><p>We use the best result on the team, not a sum or an average. A sum would make a bigger team worth more just for being bigger. An average would reward each agent for being right on its own, which pushes agents to solve the problem separately and then argue about it.</p></div>
+   <div class="step"><div class="n">03</div><h4>Compare teams, not teammates</h4><p>We never try to work out how much each agent contributed. Comparing independent teams on the same problem takes care of that: whatever separates the teams that succeeded from the ones that failed gets reinforced, and that includes helping a teammate.</p></div>
   </div>
  </div>
 </section>
@@ -229,22 +229,22 @@ footer a{color:var(--accent)}
 <!-- 03 -->
 <section id="infra">
  <div class="in">
-  <div class="label">03 / Making it work</div>
-  <h2>The objective fits in two equations.<br>The systems took the rest.</h2>
+  <div class="label">03 / Infrastructure</div>
+  <h2>What it took to make training work</h2>
   <div class="prose">
-   <p class="lead">For RL to discover useful communication, an agent has to be able to act on a teammate's discovery <i>while it is still useful</i>. That one requirement shaped almost every design choice in our harness and trainer.</p>
+   <p class="lead">The objective is simple. Most of our effort went into the harness and the trainer. For RL to discover useful communication, an agent has to be able to act on a teammate's discovery while it's still useful, and that requirement shaped most of the choices below.</p>
   </div>
   <div class="cards">
-   <div class="card"><div class="k">asynchrony</div><h4>No turns, ever</h4><p>Each agent generates, calls tools, and resumes as soon as its own tool result returns. One agent can share a discovery while another waits on a tool, so the swarm never moves at the pace of its slowest member.</p></div>
-   <div class="card"><div class="k">notifications</div><h4>Interrupt politely</h4><p>When a message arrives, the harness inserts a notification listing unread counts by sender (never the contents). Idle agents wake immediately; busy agents see it as soon as their current request finishes. Reading is the agent's choice. Agents that stop calling tools go idle and spend no tokens.</p></div>
-   <div class="card"><div class="k">chunked generation</div><h4>Nobody hogs the server</h4><p>Swarm members share one inference server with limited sequence slots and KV-cache memory. We split generation into requests of at most 1,024 tokens that resume from the exact prefix, giving every agent a chance to progress and giving notifications a place to land, without adding turns or prompts.</p></div>
-   <div class="card"><div class="k">off-policy correction</div><h4>Train while you sample</h4><p>Inference keeps generating while the trainer updates, accepting rollouts up to 4 updates stale. Exploration inference also runs in FP8. We correct the mismatch with IcePop masking plus score centering, which removes the bias that masking alone compounds over training.</p></div>
-   <div class="card"><div class="k">loss masking</div><h4>Train only on what you wrote</h4><p>Messages from teammates, tool results, and notifications are in context but masked from the loss, so an agent is never trained to imitate another agent's words. We keep exact sampled tokens and log-probs across interruptions so importance ratios are exact.</p></div>
-   <div class="card"><div class="k">isolation</div><h4>No free lunches</h4><p>Each team attempt has its own message board. Each agent has its own random stream, so server ordering never changes its samples. Teams are weighted equally regardless of length. And maze door orders are identical for everyone, so diversity has to be learned.</p></div>
+   <div class="card"><div class="k">asynchrony</div><h4>Agents don't take turns</h4><p>Each agent generates text, calls tools, and continues as soon as its own tool result comes back. One agent can share a discovery while another is waiting on a tool, so the team isn't held to the pace of its slowest member.</p></div>
+   <div class="card"><div class="k">notifications</div><h4>Messages arrive as notifications</h4><p>When a message comes in, the harness adds a notification to the recipient's history with unread counts by sender, but not the contents. An idle agent wakes up right away, and a busy one sees the notification when its current request finishes. It's up to the agent whether to read it. An agent that stops calling tools goes idle and spends no tokens.</p></div>
+   <div class="card"><div class="k">chunked generation</div><h4>Sharing the inference server</h4><p>All agents in a swarm share one inference server, with a limited number of sequence slots and limited KV-cache memory. If a few agents run long generations, everyone else waits. We split generation into requests of at most 1,024 tokens that continue from the exact same prefix. This gives every agent a chance to make progress and gives notifications a place to land, without adding turns or extra prompts.</p></div>
+   <div class="card"><div class="k">off-policy correction</div><h4>Training while sampling</h4><p>The inference server keeps collecting episodes while the trainer updates, and we accept rollouts up to four updates old. For exploration, inference also runs in FP8. To correct for the mismatch, we use IcePop to mask tokens with extreme importance ratios, plus score centering to remove the bias that masking introduces over time.</p></div>
+   <div class="card"><div class="k">loss masking</div><h4>Only train on what each agent wrote</h4><p>Messages from teammates, tool results, and notifications are in an agent's context, but we mask them out of the loss so an agent never learns to imitate another agent's words. We keep the exact sampled tokens and their log-probabilities across interruptions, so the importance ratios are exact.</p></div>
+   <div class="card"><div class="k">isolation</div><h4>Keeping comparisons clean</h4><p>Each team attempt has its own message board, and each agent has its own random seed, so the order the server answers requests never changes what an agent samples. Teams count equally in the loss no matter how long they talk. In exploration, every agent sees the doors in the same order, so any diversity in their search has to be learned.</p></div>
   </div>
-  <h3>Fair comparisons are part of the infrastructure</h3>
+  <h3>Making the comparison fair</h3>
   <div class="prose">
-   <p>A swarm can look better simply because it runs more agents. Best-of-N sampling is a strong baseline that keeps improving with N. So every learner we compare sees the same problems, the same number of agent trajectories per update, the same per-agent token allowance, and the same optimizer. The solo baseline is trained as a single agent with that budget, and at evaluation we run N independent copies and count a success if any of them solves the problem.</p>
+   <p>A swarm can look better just because it runs more agents. Best-of-N sampling is a strong baseline, and it keeps improving as N grows. So every learner we compare gets the same problems, the same number of agent trajectories per update, the same per-agent token budget, and the same optimizer. Our solo baseline is a single agent trained with that budget. At evaluation we run N independent copies of it and count a success if any of them solves the problem.</p>
   </div>
  </div>
 </section>
@@ -252,73 +252,72 @@ footer a{color:var(--accent)}
 <!-- 04 -->
 <section class="dark" id="tasks">
  <div class="in">
-  <div class="label">04 / Why these problems</div>
-  <h2>Two reasons groups beat individuals,<br>and why both get harder with scale</h2>
-  <p class="lead prose">Our tasks are deliberately simple, because each isolates a different reason teams are useful. As you add agents, they fail in opposite directions.</p>
+  <div class="label">04 / Tasks</div>
+  <h2>Two reasons groups help, and why both get harder with more agents</h2>
+  <p class="lead prose">Both of our tasks are simple on purpose. Each one isolates a different reason a team can do better than an individual, and they get harder in opposite ways as the swarm grows.</p>
   <div class="tasks">
    <div class="task">
     <div class="trend down">▼ harder as N grows</div>
     <h3>Information aggregation</h3>
-    <p>Each agent holds one private number, written in English ("forty-two"). The swarm must return all N numbers sorted. Sorting is trivial; the coordination is not: share your number, read everyone else's, track who owns what so repeats don't create duplicates, and submit only after hearing from everyone, with messages arriving in an unpredictable order.</p>
-    <div class="ex">Think of agents that each read different files in a codebase, each search different sources for a report, or sensors that each see part of a scene. The answer exists only once the pieces are combined, and more independent agents cannot substitute for that exchange.</div>
+    <p>Each agent gets one private number between 1 and 99, written in English ("forty-two"). The team has to return all N numbers in sorted order. Sorting is easy once you have the numbers. The hard part is coordinating: each agent has to share its number, read everyone else's, keep track of who sent what so repeated messages don't create duplicates, and only submit once it has heard from everyone. Messages can arrive in any order.</p>
+    <div class="ex">This is a stripped-down version of a common situation: agents reading different files in a codebase, searching different sources for a report, or sensors each seeing part of a scene. The answer only exists once the pieces are combined, and adding more independent agents doesn't help.</div>
     <div class="eqbox">\[ P_{\mathrm{coord}}(N) \le \min\!\left(1,\, N q^{N-1}\right) \]</div>
-    <p class="muted" style="font-size:15px">If each needed transfer succeeds with probability \(q&lt;1\), success eventually decays exponentially in N. An inbox can also be in \(2^{N-1}\) states: 8 with four agents, 32,768 with sixteen. Agents must learn a rule like "wait for N−1 distinct senders."</p>
+    <p class="muted" style="font-size:15px">If each message a recipient needs gets through with probability \(q&lt;1\), success eventually drops off exponentially with N. An agent's inbox can also be in \(2^{N-1}\) states depending on who has reported, which is 8 with four agents and 32,768 with sixteen. Agents have to learn a general rule, like waiting until they've heard from N−1 different teammates.</p>
    </div>
    <div class="task">
     <div class="trend up">▲ baseline improves as N grows</div>
     <h3>Decentralized exploration</h3>
-    <p>Each agent explores its own copy of an unknown tree of rooms: 3 doors per junction, corridors of ten moves, one exit among 27 dead ends, 391 rooms in total. A full depth-first search can take 780 moves, more than an agent can afford in its 8,192 tokens. The first agent out wins for everyone.</p>
-    <div class="ex">This is collaborative discovery: parallel research agents, distributed bug hunts, or the tens of thousands of agents recently pointed at a single math problem. Any searcher could succeed alone, but a team that shares findings can split the space and skip each other's dead ends.</div>
+    <p>Each agent explores its own copy of an unknown tree of rooms, starting from the same place. Every junction has 3 doors, junctions are ten moves apart, and one of the 27 rooms at the bottom is the exit. Searching the whole tree can take 780 moves, usually more than an agent can afford with its 8,192 tokens. The first agent to reach the exit solves it for the team.</p>
+    <div class="ex">This is a simple model of searching together: parallel research agents, a distributed bug hunt, or the thousands of agents recently put on a single open math problem. Anyone could get there alone, but a team that shares what it finds can split up the space and avoid repeating each other's dead ends.</div>
     <div class="eqbox">\[ P_{\mathrm{search}}(N) = 1-(1-p)^N \]</div>
-    <p class="muted" style="font-size:15px">Independent best-of-N keeps getting stronger. Communication only earns its keep if it beats a baseline that rises with every agent you add.</p>
+    <p class="muted" style="font-size:15px">Here the independent baseline keeps getting stronger as you add agents. Communication only helps if it beats a best-of-N baseline that rises with N.</p>
    </div>
   </div>
-<div class="demo-wrap" style="padding:0;margin-top:44px"><div class="label">Try it: the two tasks</div>
+<div class="demo-wrap" style="padding:0;margin-top:44px"><div class="label">Illustrations</div>
+  <p style="color:#bbb;font-size:15px;max-width:740px;margin:-4px 0 16px">Two cartoons of what communication buys a team. The first follows our information aggregation task. The second is a stylized search problem, not our maze, meant to show how one agent's find can speed up another's.</p>
   <div class="demo" id="demo">
     <div class="bar">
       <div class="tabs" role="tablist">
-        <button class="on" data-scene="agg">Information aggregation</button>
-        <button data-scene="exp">Decentralized exploration</button>
+        <button class="on" data-scene="agg">Sharing private information</button>
+        <button data-scene="exp">Searching together</button>
       </div>
       <div class="toggle" id="toggle"></div>
     </div>
-    <svg id="stage" viewBox="0 0 1000 440" role="img" aria-label="Animated simulation of a swarm of agents messaging each other"></svg>
+    <svg id="stage" viewBox="0 0 1000 440" role="img" aria-label="Cartoon of agents messaging each other"></svg>
     <div class="cap" id="cap"></div>
   </div>
-  <p style="font-size:13px;color:#aaa;text-align:center;margin-top:10px">An illustrative simulation of the behaviors we observe in trained swarms (not a recording of model outputs).</p>
 </div>
-
  </div>
 </section>
 
 <!-- 05 -->
 <section id="results">
  <div class="in">
-  <div class="label">05 / Information aggregation</div>
-  <h2>Swarms learn to pool what they know</h2>
-  <div class="prose"><p class="lead">s³ learns reliable information aggregation, substantially outperforming controls trained with the same budget.</p></div>
+  <div class="label">05 / Results: information aggregation</div>
+  <h2>Swarms learn to share what they know</h2>
+  <div class="prose"><p class="lead">s³ learns to aggregate information reliably and does much better than controls trained with the same budget.</p></div>
   <div class="stats">
-   <div class="stat"><div class="v g">93%</div><div class="d">s³ success with 4 agents</div></div>
-   <div class="stat"><div class="v">35%</div><div class="d">imitating its own successful swarms (online SFT)</div></div>
-   <div class="stat"><div class="v">13%</div><div class="d">each agent rewarded only for its own answer</div></div>
+   <div class="stat"><div class="v g">93%</div><div class="d">success for s³ with 4 agents</div></div>
+   <div class="stat"><div class="v">35%</div><div class="d">training on the swarm's own successful episodes (online SFT)</div></div>
+   <div class="stat"><div class="v">13%</div><div class="d">rewarding each agent only for its own answer</div></div>
   </div>
   <figure class="narrow">
    <img src="assets/aggregation_controls.png" alt="Bar chart of information aggregation success" loading="lazy">
-   <figcaption><b>Figure 2 · Held-out success at N = 4.</b> Mean ± SE across six seeds. All learners receive the same collection budget, so neither extra interaction nor extra successful examples explains the gap.</figcaption>
+   <figcaption><b>Figure 2.</b> Held-out success with four agents, the training swarm size. Bars show mean ± SE across six seeds. All three learners get the same training budget, so the gap isn't explained by more interaction or more successful examples.</figcaption>
   </figure>
-  <div class="prose"><p>s³ agents also talk less and more evenly. Each broadcasts its number about once, and all agents send about equally. The controls send more messages overall, but a few agents send most of them while the rest stay quiet.</p></div>
+  <div class="prose"><p>s³ agents also send fewer messages. Each one broadcasts its number about once, and every agent sends about the same amount. The controls send more messages overall, but a few agents send most of them while the rest say very little.</p></div>
   <figure>
    <img src="assets/message_graphs.png" alt="Delivery concentration, reciprocity, and message counts for each method" loading="lazy">
-   <figcaption><b>Figure 3 · Communication structure</b> in final-policy episodes at N = 4. Concentration measures whether a few agents dominate sending; reciprocity measures how much communication flows both ways.</figcaption>
+   <figcaption><b>Figure 3.</b> Communication structure in evaluation episodes with four agents. Delivery concentration measures whether a few agents do most of the sending, and reciprocity measures how much communication goes both ways.</figcaption>
   </figure>
 
-  <h3>Scaling past the training size</h3>
+  <h3>Running bigger swarms than we trained</h3>
   <div class="prose">
-   <p>We train with four agents and deploy up to sixteen without retraining. At <b>eight agents, twice the training size, s³ solves over 25× as many problems as the strongest baseline</b>, and its advantage persists through twelve. At sixteen every method struggles: the learned exchange transfers, but it cannot erase the exponentially growing difficulty of tracking everyone's information.</p>
+   <p>We train with four agents and then evaluate with up to sixteen, without retraining. With <b>eight agents, twice the training size, s³ solves over 25× as many problems as the strongest baseline</b>, and it stays ahead through twelve agents. At sixteen, every method struggles. What the swarm learned transfers, but it doesn't remove the growing difficulty of tracking everyone's information.</p>
   </div>
   <figure>
    <img src="assets/scaling_comparison.png" alt="Success and token efficiency across evaluation swarm sizes" loading="lazy">
-   <figcaption><b>Figure 4 · Generalizing to bigger swarms.</b> Information aggregation (top) and decentralized exploration (bottom). Swarms train with four agents (dashed line). Token efficiency is solve rate divided by the fraction of the population's token budget used, failures included.</figcaption>
+   <figcaption><b>Figure 4.</b> Held-out results across swarm sizes for information aggregation (top) and decentralized exploration (bottom). Swarms train with four agents (dashed line). Token efficiency is solve rate divided by the fraction of the population's token budget used, counting failures.</figcaption>
   </figure>
  </div>
 </section>
@@ -326,24 +325,24 @@ footer a{color:var(--accent)}
 <!-- 06 -->
 <section class="dark" id="emergence">
  <div class="in">
-  <div class="label">06 / Emergence</div>
-  <h2>Watching a protocol form,<br>and a social dilemma appear</h2>
+  <div class="label">06 / How coordination emerges</div>
+  <h2>What changes during training</h2>
   <div class="split">
    <div>
-    <p class="lead">These learners start from the base model with no demonstrations, so we can watch coordination emerge purely from RL.</p>
-    <p>Early on, about half of swarms include an agent that never sends its number, and most of the rest hold direct-message conversations. Partway through, swarms switch to broadcasts, at first repeating them. By the end, <b>about 80% settle on exactly one broadcast per agent</b>, and agents learn to share <i>before</i> they read.</p>
-    <p class="muted">Why that protocol? Early in training, the few swarms that already broadcast once each succeed about 30 points more often than swarms on the same problem that converse via direct messages. The shared reward amplifies the difference until it takes over.</p>
+    <p class="lead">These agents start from the base model with no demonstrations, so everything they learn about coordinating comes from RL.</p>
+    <p>Early in training, about half of swarms have at least one agent that never sends its number, and most of the rest talk in direct messages. Partway through, swarms switch to broadcasting, at first more than once. By the end, <b>about 80% of swarms settle on one broadcast per agent</b>, and agents learn to share their own number before checking their inbox.</p>
+    <p class="muted">Why this pattern? Early on, the few swarms that already broadcast once per agent succeed about 30 percentage points more often than swarms on the same problem that use direct messages. The shared reward keeps reinforcing that difference until it takes over.</p>
    </div>
    <div>
-    <h3 style="margin-top:0;color:#fff">Individual rewards break cooperation</h3>
-    <p>When each agent is paid only for its own answer, sharing your number only helps your teammates. So every agent learns to wait for someone else to go first. More and more agents read before they send, and many eventually never send at all.</p>
-    <p>This is a <b>public goods game</b>: everyone would do better if all shared, but each agent is better off free-riding. When everyone waits, nobody shares. A shared reward dissolves the dilemma, because an agent gains whenever any teammate answers correctly.</p>
-    <p class="muted">Try the "Individual reward" toggle in the demo at the top of the page.</p>
+    <h3 style="margin-top:0;color:#fff">Individual rewards create a social dilemma</h3>
+    <p>When each agent is rewarded only for its own answer, sending your number only helps your teammates. Each agent is better off waiting for someone else to go first. Over training, more agents read before they send, and many stop sending at all.</p>
+    <p>This is a public goods game. Everyone would do better if everyone shared, but each agent does better individually by holding back, and when everyone holds back, nobody shares. With a shared reward the dilemma goes away, because an agent benefits whenever any teammate gets the answer right.</p>
+    <p class="muted">You can see this in the "Individual reward" setting of the first illustration above.</p>
    </div>
   </div>
   <figure>
    <img src="assets/training_analysis.png" alt="Training dynamics of communication structure, read-before-send rate, and exploration success by exit door" loading="lazy">
-   <figcaption><b>Figure 5 · How coordination changes during training.</b> (a) Aggregation swarms move from incomplete sharing, through repeated broadcasts, to one broadcast per agent. (b) Under individual rewards, agents increasingly read before sharing. (c) In exploration, communicating swarms succeed wherever the exit is hidden.</figcaption>
+   <figcaption><b>Figure 5.</b> (a) Information aggregation swarms go from incomplete sharing, through repeated broadcasts, to one broadcast per agent. (b) With individual rewards, more and more agents read before sharing. (c) In exploration, communicating swarms succeed at about the same rate no matter which door leads to the exit.</figcaption>
   </figure>
  </div>
 </section>
@@ -351,24 +350,24 @@ footer a{color:var(--accent)}
 <!-- 07 -->
 <section id="exploration">
  <div class="in">
-  <div class="label">07 / Decentralized exploration</div>
-  <h2>Swarms learn to divide and conquer</h2>
+  <div class="label">07 / Results: decentralized exploration</div>
+  <h2>Swarms learn to split up the search</h2>
   <div class="prose">
-   <p class="lead">Here any agent can find the exit alone, so the question is whether talking helps beyond simply running more agents.</p>
-   <p>Both swarm and solo policies start from a short phase of supervised fine-tuning on scripted demonstrations of valid exploration (messages appear only in the swarm demonstrations), and RL then trains on harder, deeper mazes.</p>
+   <p class="lead">In exploration any agent can find the exit alone, so the question is whether communicating helps beyond simply running more agents.</p>
+   <p>Both swarm and solo policies start with a short round of supervised fine-tuning on scripted demonstrations of valid exploration (only the swarm demonstrations include messages). RL then trains on larger, harder trees.</p>
   </div>
   <div class="stats">
-   <div class="stat"><div class="v g">−19 pts</div><div class="d">success lost when messaging is removed (4 agents)</div></div>
-   <div class="stat"><div class="v g">~½</div><div class="d">as many repeated rooms as non-communicating swarms</div></div>
+   <div class="stat"><div class="v g">−19 pts</div><div class="d">success with four agents when messaging is turned off</div></div>
+   <div class="stat"><div class="v g">~½</div><div class="d">the room overlap of swarms that can't communicate</div></div>
    <div class="stat"><div class="v g">4 ≈ 6</div><div class="d">four s³ agents nearly match six solo-trained agents</div></div>
   </div>
   <figure class="narrow">
    <img src="assets/exploration_controls.png" alt="Bar chart of decentralized exploration success at N=4" loading="lazy">
-   <figcaption><b>Figure 6 · Held-out success at N = 4.</b> Removing communication while keeping the shared reward costs 19 percentage points.</figcaption>
+   <figcaption><b>Figure 6.</b> Held-out success with four agents. Turning off messaging while keeping the shared reward costs 19 percentage points.</figcaption>
   </figure>
   <div class="prose">
-   <p>Because every agent sees the doors listed in the same order, agents with similar habits all take the first door. Swarms that cannot communicate find the exit easily when it is behind that first door, and much less often when it is behind the third. s³ swarms succeed at about the same rate wherever the exit is, because agents <b>claim different branches and report the ones they have finished</b> (Figure 5c).</p>
-   <p>As swarms grow, communicating swarms reach high success sooner: four s³ agents nearly match six solo-trained agents, and six nearly match eight. At six agents, s³ beats best-of-six by about 7 percentage points with no statistically detectable loss in token efficiency. At the largest sizes independent search also approaches perfect success, so communication's main benefit is getting there with fewer agents.</p>
+   <p>Every agent sees each room's doors listed in the same order, so agents with similar habits tend to take the same first door. Swarms that can't communicate do fine when the exit is behind that first door, worse when it's behind the second, and much worse when it's behind the third. s³ swarms succeed at about the same rate wherever the exit is, because agents <b>claim different branches and report the ones they've finished</b> (Figure 5c).</p>
+   <p>As we add agents, communicating swarms reach high success sooner. Four s³ agents nearly match six solo-trained agents, and six nearly match eight. With six agents, s³ beats best-of-six by about 7 percentage points, with no statistically detectable loss in token efficiency. At the largest sizes independent search also gets close to perfect, so the main benefit of communication is getting there with fewer agents.</p>
   </div>
  </div>
 </section>
@@ -376,12 +375,12 @@ footer a{color:var(--accent)}
 <!-- 08 -->
 <section class="dark" id="ingredients">
  <div class="in">
-  <div class="label">08 / What drives the gains</div>
-  <h2>Ablations</h2>
+  <div class="label">08 / Ablations</div>
+  <h2>What matters</h2>
   <div class="steps">
-   <div class="step"><div class="n">shared reward</div><h4>Works for both kinds of coordination.</h4><p>In exploration, individual rewards do about as well as s³, since teammates' reports help each agent reach the exit itself. In aggregation, sending your number only helps others, and individual rewards collapse. Shared rewards handle both, which matters when you don't know a problem's structure in advance.</p></div>
-   <div class="step"><div class="n">communication</div><h4>Talking is doing real work.</h4><p>Keeping the team reward but removing messages drops four-agent exploration success by 19 points and roughly doubles repeated search. The gains come from coordinating, not just from the team objective.</p></div>
-   <div class="step"><div class="n">demonstrations</div><h4>Exploration needs a good start.</h4><p>Without fine-tuning on demonstrations, swarm and solo learners both stay far less successful, and the swarm has no significant edge. Demonstrations start both much higher, and RL keeps improving the swarm.</p></div>
+   <div class="step"><div class="n">shared reward</div><h4>It works for both tasks</h4><p>In exploration, individual rewards do about as well as s³, because hearing about a teammate's dead ends helps you reach the exit yourself. In aggregation, sending your number only helps others, and individual rewards fall apart. A shared reward works in both cases, which matters when you don't know the structure of a problem ahead of time.</p></div>
+   <div class="step"><div class="n">communication</div><h4>The messages are doing real work</h4><p>Keeping the shared reward but turning off messaging drops exploration success with four agents by 19 points and roughly doubles how much agents repeat each other's search. The gains come from coordinating, not just from the team objective.</p></div>
+   <div class="step"><div class="n">demonstrations</div><h4>Exploration needs a starting point</h4><p>Without fine-tuning on demonstrations first, both swarm and solo learners stay much less successful, and the swarm has no significant edge. With demonstrations, both start much higher, and RL keeps improving the swarm from there.</p></div>
   </div>
  </div>
 </section>
@@ -389,14 +388,14 @@ footer a{color:var(--accent)}
 <!-- 09 -->
 <section id="next">
  <div class="in">
-  <div class="label">09 / What's next</div>
-  <h2>This is just the beginning</h2>
+  <div class="label">09 / Next steps</div>
+  <h2>Where this goes next</h2>
   <div class="prose">
-   <p class="lead">We are now scaling s³ to larger models and more sophisticated tasks.</p>
-   <p>These experiments use two tasks and small models (Qwen3-0.6B for aggregation, Qwen3-1.7B for exploration), so there is a lot left to test. The training traces also point to concrete failure modes: agents sometimes submit a wrong answer despite having every number, repeat a teammate's search, or trust an unverified report. Training agents to track what their partners know, and whether those reports are justified, could make larger swarms more reliable without more communication.</p>
-   <p>The broader lesson is that <b>effective collaboration can be learned in the same process as task solving</b>. With a shared goal and infrastructure that lets agents act asynchronously, useful ways of exchanging information and dividing work develop on their own. Because they transfer to larger populations, training a small swarm can support scaling at inference. We are excited to see what learned self-organization unlocks for multi-agent systems as a whole.</p>
+   <p class="lead">We're currently scaling s³ to larger models and more sophisticated tasks.</p>
+   <p>Our experiments so far use two tasks and small models (Qwen3-0.6B for aggregation and Qwen3-1.7B for exploration), so there's a lot left to test. Looking through the training traces also points to specific failure modes. Agents sometimes submit a wrong answer even when they have every number, repeat a teammate's search, or trust a report they haven't checked. Training agents to keep track of what their teammates know, and whether those reports can be trusted, could make bigger swarms more reliable without more communication.</p>
+   <p>Our main takeaway is that agents can learn to collaborate in the same training process where they learn the task. With a shared goal and infrastructure that lets them act asynchronously, useful ways of sharing information and dividing work show up during training. Because those behaviors carry over to larger swarms, training a small swarm can pay off when you deploy a bigger one. We're excited to see what this makes possible for multi-agent systems more broadly.</p>
   </div>
-  <div class="btns" style="justify-content:flex-start"><a class="btn" href="paper.pdf">Read the full paper</a></div>
+  <div class="btns" style="justify-content:flex-start"><a class="btn" href="paper.pdf">Read the paper</a></div>
  </div>
 </section>
 
@@ -462,6 +461,7 @@ function bot(x,y,color,name,parent,scale){
 function bubble(parent,x,y,text,opts){
   opts=opts||{};
   const g=el('g',{opacity:0},parent);
+  {const w0=Math.max(40,text.length*(opts.size||13)*0.56+20);x=Math.max(w0/2+4,Math.min(996-w0/2,x));}
   const t=txt(text,{x:x,y:y,'text-anchor':'middle','font-size':opts.size||13,fill:opts.color||'#222','font-family':'Arial,Helvetica,sans-serif','font-weight':opts.bold?700:400},g);
   const w=Math.max(40,text.length*(opts.size||13)*0.56+20);
   const r=el('rect',{x:x-w/2,y:y-(opts.size||13)-6,width:w,height:(opts.size||13)+14,rx:9,fill:opts.bg||'#fff',stroke:opts.stroke||'#d0d0d0'},g);
@@ -512,7 +512,7 @@ function runAgg(){
   });
   function refresh(i){const arr=[...inbox[i]].map(j=>nums[j]).sort((a,b)=>a-b);lists[i].textContent='heard: '+arr.join(', ')+(inbox[i].size===4?' ✓':'');if(inbox[i].size===4)lists[i].setAttribute('fill','#029E73')}
   if(mode==='shared'){
-    setCap('<b>Shared reward.</b> Each agent broadcasts its number once, early, without waiting to read first. Messages arrive asynchronously, and every agent assembles the full list.');
+    setCap('<b>Shared reward.</b> Each agent broadcasts its number once, early, without waiting to read first. Messages arrive in no particular order, and every agent ends up with the full list.');
     const order=[0,1,2,3].sort(()=>Math.random()-.5);
     order.forEach((i,k)=>{
       later(700+k*rnd(350,650),()=>{
@@ -529,7 +529,7 @@ function runAgg(){
       });
     });
   } else {
-    setCap('<b>Individual reward.</b> Sharing your number only helps your teammates, so each agent learns to read first and wait for someone else to go first. Nobody shares, and nobody can answer.');
+    setCap('<b>Individual reward.</b> Sending your number only helps your teammates, so each agent waits for someone else to go first. Nobody shares, so nobody can answer.');
     pos.forEach((p,i)=>{
       later(500+i*250,()=>{const bb=bubble(layer,p[0],p[1]-70,'read_messages() → (empty)',{size:12,color:'#777'});later(1400,()=>fade(bb,0,300))});
       later(2200+i*250,()=>{const bb=bubble(layer,p[0],p[1]-70,'…waiting for others',{size:12,color:'#777'});later(1600,()=>fade(bb,0,300))});
@@ -580,7 +580,7 @@ function runExp(){
       else{say(a,'found it alone, on a second, finer sweep',2400,{bold:true});finish('slow','goal in '+secs+'s, the slow way')}
       return;
     }
-    if(mode!=='shared'){say(a,'found a clue… but no way to tell anyone',2200,{color:'#999'});return}
+    if(mode!=='shared'){say(a,'found a clue, but can\'t tell anyone',2200,{color:'#999'});return}
     const nxt=clues[c.k+1], o=A[nxt.region];
     // global progress broadcast
     say(a,'📣 all: clue '+(c.k+1)+' found ✓',1500);pulse(a.x,a.y,COLORS[a.i]);
@@ -594,8 +594,8 @@ function runExp(){
     });
   }
   setCap(mode==='shared'
-    ?'<b>Messaging on.</b> Any agent could find the goal alone eventually, but each find is a clue for a teammate. Agents <b>DM</b> that teammate the specific hint and <b>broadcast</b> progress to everyone, so each discovery builds on the last and the team gets there much faster.'
-    :'<b>Messaging off.</b> The goal is still reachable, just slower. Clues point into a teammate\'s region but the hint never reaches them, so the goal\'s owner has to find it alone by combing its region again, more finely.');
+    ?'<b>Messaging on.</b> Any agent could find the goal alone eventually, but each find is a clue for a teammate. The finder sends that teammate a <b>direct message</b> with the hint and <b>broadcasts</b> progress to everyone, so each find builds on the last and the team gets there much faster.'
+    :'<b>Messaging off.</b> The team still gets there, just more slowly. Clues point into a teammate\'s region, but the hints never reach them, so the agent whose region has the goal has to find it alone by searching its region a second time, more carefully.');
   let last=performance.now(), lastTrail=A.map(a=>[a.x,a.y]);
   function tick(now){
     const dt=Math.min(40,now-last);last=now;
@@ -681,7 +681,7 @@ function runExp(){
           }
         },top);
       });
-      if(nFound===F.length){hl(900,()=>{const b=bubble(top,500,HT/2,'swarm mapped everything together 🎉',{size:16,bold:true,stroke:'#029E73'});});hl(4200,reset)}
+      if(nFound===F.length){hl(900,()=>{const b=bubble(top,500,HT/2,'everything found 🎉',{size:16,bold:true,stroke:'#029E73'});});hl(4200,reset)}
     }
     A.forEach(newTarget);
     let last=performance.now();
